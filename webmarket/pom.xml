@@ -2,42 +2,55 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>4.0.8</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
+	
 	<groupId>br.gov.caixa</groupId>
-	<artifactId>web-market</artifactId>
+	<artifactId>webmarket</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name/>
-	<description/>
-	<url/>
-	<licenses>
-		<license/>
-	</licenses>
+	<packaging>pom</packaging>
+	<name>WebMarket</name>		
+	<description>Projeto final do módulo Arquitetura de Software Ágil II</description>
+	
 	<developers>
-		<developer/>
+		<developer>
+			<id>Davi</id>
+			<name>Davi</name>
+		</developer>
+		<developer>
+			<id>Marcos</id>
+			<name>Marcos</name>
+		</developer>
+		<developer>
+			<id>Yuri</id>
+			<name>Yuri</name>
+		</developer>
 	</developers>
-	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
-	</scm>
+	
+	<modules>
+		<module>pedido-gravador</module>
+	</modules>
+
 	<properties>
 		<java.version>21</java.version>
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <resilience4j.version>2.2.0</resilience4j.version>
+        <pact.version>4.6.14</pact.version>
+        <qpid.version>9.2.0</qpid.version>
+        <embedded-redis.version>1.4.3</embedded-redis.version>
 	</properties>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-amqp</artifactId>
-		</dependency>
+		
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache</artifactId>
@@ -73,11 +86,6 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-amqp-test</artifactId>
-			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-cache-test</artifactId>
 			<scope>test</scope>
 		</dependency>
@@ -98,6 +106,52 @@
 		</dependency>
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>plano-b-jvm</id>
+			<activation>
+				<activeByDefault>true</activeByDefault>
+			</activation>
+			<dependencies>
+				<!-- Cache: Caffeine atrás da abstração Spring Cache (substitui Redis) -->
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-cache</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>com.github.ben-manes.caffeine</groupId>
+					<artifactId>caffeine</artifactId>
+				</dependency>
+				<!-- Filas: Spring AMQP + broker Qpid embarcável (substitui RabbitMQ via Docker) -->
+				<dependency>
+					<groupId>org.springframework.boot</groupId>
+					<artifactId>spring-boot-starter-amqp</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>org.apache.qpid</groupId>
+					<artifactId>qpid-broker</artifactId>
+					<version>${qpid.version}</version>
+					<exclusions>
+						<exclusion>
+							<groupId>com.sleepycat</groupId>
+							<artifactId>je</artifactId>
+						</exclusion>
+					</exclusions>
+				</dependency>
+				<!-- Tópicos: broker Kafka in-JVM (substitui Kafka via Docker) -->
+				<dependency>
+					<groupId>org.springframework.kafka</groupId>
+					<artifactId>spring-kafka</artifactId>
+				</dependency>
+				<dependency>
+					<groupId>org.springframework.kafka</groupId>
+					<artifactId>spring-kafka-test</artifactId>
+				</dependency>
+			</dependencies>
+		</profile>
+	</profiles>
+
+<!--
 	<build>
 		<plugins>
 			<plugin>
@@ -142,5 +196,5 @@
 			</plugin>
 		</plugins>
 	</build>
-
+-->
 </project>
