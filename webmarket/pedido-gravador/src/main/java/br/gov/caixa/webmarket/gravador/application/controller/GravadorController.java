@@ -1,7 +1,8 @@
 package br.gov.caixa.webmarket.gravador.application.controller;
 
-import br.com.caixa.pix.contracts.ComprovanteView;
-import br.com.caixa.pix.contracts.GravarComprovanteCommand;
+import br.gov.caixa.webmarket.contracts.GravarPedidoCommand;
+import br.gov.caixa.webmarket.gravador.application.service.GravadorService;
+import br.gov.caixa.webmarket.contracts.PedidoView;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -24,7 +25,7 @@ public class GravadorController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ComprovanteView> buscar(@PathVariable UUID id) {
+    public ResponseEntity<PedidoView> buscar(@PathVariable UUID id) {
         return gravador.buscar(id).map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.notFound().build());
     }

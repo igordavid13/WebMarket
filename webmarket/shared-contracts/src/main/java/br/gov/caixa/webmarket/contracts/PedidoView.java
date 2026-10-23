@@ -7,6 +7,6 @@ import java.util.UUID;
 public record PedidoView (
     UUID identificadorPedido,
     Integer cliente,
-    List<ItemPedido> itens,
+    List<ItemPedidoView> itens,
     LocalDateTime dataPedido
 ) {}

@@ -1,6 +1,7 @@
-package br.com.caixa.pix.gravador.infrastructure.messaging;
+package br.gov.caixa.webmarket.gravador.infrastructure.messaging;
 
-import br.com.caixa.pix.contracts.PedidoGravadoEvent;
+import br.gov.caixa.webmarket.contracts.PedidoGravadoEvent;
+import br.gov.caixa.webmarket.gravador.infrastructure.config.KafkaConfig;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
 

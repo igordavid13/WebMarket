@@ -1,6 +1,6 @@
 package br.gov.caixa.webmarket.contracts;
 
-public record ItemPedido(
+public record ItemPedidoRequest(
     Integer produto,
     Integer quantidade
 ) {}

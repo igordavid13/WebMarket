@@ -4,8 +4,8 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<parent>
-		<groupId>br.gov.caixa.webmarket</groupId>
-		<artifactId>pedidos</artifactId>
+		<groupId>br.gov.caixa</groupId>
+		<artifactId>webmarket</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
@@ -46,12 +46,11 @@
             <artifactId>h2</artifactId>
             <scope>runtime</scope>
         </dependency>        
-        <!--
         <dependency>
             <groupId>br.com.caixa.pix</groupId>
             <artifactId>shared-contracts</artifactId>
+            <version>${project.version}</version>
         </dependency>
-        -->
         <!--
 		<dependency>
             <groupId>au.com.dius.pact.provider</groupId>

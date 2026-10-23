@@ -1,6 +1,8 @@
-package br.com.caixa.pix.gravador.infrastructure.messaging;
+package br.gov.caixa.webmarket.gravador.infrastructure.messaging;
 
-import br.com.caixa.pix.contracts.GravarPedidoCommand;
+import br.gov.caixa.webmarket.contracts.GravarPedidoCommand;
+import br.gov.caixa.webmarket.gravador.application.service.GravadorService;
+import br.gov.caixa.webmarket.gravador.infrastructure.config.MessagingConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
@@ -18,7 +20,7 @@ public class GravacaoListener {
     }
 
     @RabbitListener(queues = MessagingConfig.FILA)
-    public void aoReceber(GravarComprovanteCommand command) {
+    public void aoReceber(GravarPedidoCommand command) {
         gravador.gravar(command); // idempotente sob redelivery
     }
 

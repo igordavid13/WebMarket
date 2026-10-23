@@ -1,0 +1,20 @@
+{
+  "identificadorPedido": "550e8400-e29b-41d4-a716-446655440000",
+  "dados": {
+    "idCliente": 1,
+    "itens": [
+      {
+        "produto": 1,
+        "quantidade": 1
+      },
+      {
+        "produto": 2,
+        "quantidade": 2
+      },
+      {
+        "produto": 3,
+        "quantidade": 1
+      }
+    ]
+  }
+}

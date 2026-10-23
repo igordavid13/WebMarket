@@ -26,7 +26,8 @@ Projeto de marketplace com dois microsserviços, **ms-produto** (Catálogo) e **
 13. [Cache](#13-cache)
 14. [Contract Test](#14-contract-test)
 15. [API](#15-api)
-16. [Evoluções Futuras](#16-evoluções-futuras)
+16. [Execução local](#16-execução-local)
+17. [Evoluções Futuras](#17-evoluções-futuras)
 
 ---
 
@@ -416,7 +417,75 @@ cache.invalidate(produtoId);
 
 ---
 
-## 16. Evoluções Futuras
+## 16. Execução local
+
+Os comandos abaixo devem ser executados no diretório `webmarket`, onde está localizado o `mvnw`.
+
+### Compilar o projeto
+
+```bash
+./mvnw -pl pedido-gravador -am -DskipTests compile
+```
+
+### Iniciar a aplicação
+
+```bash
+./mvnw -pl pedido-gravador -am spring-boot:run
+```
+
+A aplicação será iniciada na porta `8082`.
+
+### Gravar um pedido diretamente pelo endpoint HTTP
+
+Esta chamada grava o pedido diretamente no banco de dados, sem passar pelo
+RabbitMQ:
+
+```bash
+curl --fail-with-body --silent --show-error \
+  --request POST 'http://localhost:8082/interno/pedidos' \
+  --header 'Content-Type: application/json' \
+  --data-binary @pedido-gravador/src/main/resources/pedido-exemplo.json
+```
+
+Essa chamada HTTP retorna `200 OK` após o `GravadorController` chamar
+diretamente o `GravadorService`.
+
+### Publicar um pedido no RabbitMQ
+
+Para testar o fluxo assíncrono, publique a mensagem diretamente no exchange
+`gravacao.ex`, usando a routing key `gravacao`. O exemplo abaixo usa a API de
+gerenciamento do RabbitMQ, normalmente disponível na porta `15672`, com o
+usuário e senha padrão `guest`:
+
+```bash
+curl --fail-with-body --silent --show-error \
+  --user 'guest:guest' \
+  --request POST 'http://localhost:15672/api/exchanges/%2F/gravacao.ex/publish' \
+  --header 'Content-Type: application/json' \
+  --data-raw '{"properties":{},"routing_key":"gravacao","payload": "{\"identificadorPedido\":\"550e8400-e29b-41d4-a716-446655440001\",\"dados\":{\"idCliente\":1,\"itens\":[{\"produto\":1,\"quantidade\":1},{\"produto\":2,\"quantidade\":2},{\"produto\":3,\"quantidade\":1}]}}","payload_encoding":"string"}'
+```
+
+O `GravacaoListener` consome a fila `gravacao.q` e chama o
+`GravadorService.gravar()`. Nesse fluxo, a controller não participa:
+
+```text
+RabbitMQ gravacao.q → GravacaoListener → GravadorService → banco de dados
+```
+
+O fluxo completo é:
+
+```text
+curl HTTP → GravadorController → GravadorService → banco de dados
+curl RabbitMQ → exchange gravacao.ex → fila gravacao.q
+             → GravacaoListener → GravadorService → banco de dados
+```
+
+O `DatabaseInitializer` cadastra automaticamente os clientes e produtos usados
+no exemplo quando a aplicação é iniciada.
+
+---
+
+## 17. Evoluções Futuras
 
 - **Outbox Pattern:** garante que o pedido salvo e o evento publicado não fiquem inconsistentes.
 - **Saga orquestrada:** para pagamento, frete e compensações.

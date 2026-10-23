@@ -1,10 +1,13 @@
 package br.gov.caixa.webmarket.gravador.domain.entity;
 
+import br.gov.caixa.webmarket.gravador.domain.enums.SituacaoPedidoEnum;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.math.BigDecimal;
 
 @Entity
 @Table(name = "pedido")
@@ -17,7 +20,7 @@ public class PedidoEntity {
     @JoinColumn(name="cliente_id", nullable = false)
     private ClienteEntity cliente;
 
-    @OneToMany(mappedBy = "pedido")
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemPedidoEntity> itens = new ArrayList<>();
 
     @OneToMany(mappedBy = "pedido")
@@ -31,60 +34,47 @@ public class PedidoEntity {
 
     protected PedidoEntity() {}
 
-    private PedidoEntity(UUID id, PedidoRequest pedidoRequest) {
+    private PedidoEntity(UUID id, ClienteEntity cliente) {
         this.id = id;
-        this.cliente = pedidoRequest.getCliente();
-        this.itens = pedidoRequest.getItens();
-        this.situacao = pedidoRequest.getSituacao();
-        this.valorTotal = pedidoRequest.getValorTotal();
-        this.dataPedido = pedidoRequest.getDataPedido();
+        this.cliente = cliente;
+        this.situacao.add(new SituacaoPedidoEntity(this, SituacaoPedidoEnum.CRIADO));
+        this.dataPedido = LocalDateTime.now();
+    }
+
+    public static PedidoEntity de(UUID id, ClienteEntity cliente) {
+        return new PedidoEntity(id, cliente);
+    }
+
+    public void adicionarItem(ItemPedidoEntity item) {
+        itens.add(item);
+        valorTotal = itens.stream()
+                .map(ItemPedidoEntity::getPrecoTotal)
+                .reduce(BigDecimal.ZERO, BigDecimal::add)
+                .floatValue();
     }
 
     public UUID getId() {
         return id;
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
     public ClienteEntity getCliente() {
         return cliente;
-    }
-
-    public void setCliente(ClienteEntity cliente) {
-        this.cliente = cliente;
     }
 
     public List<ItemPedidoEntity> getItens() {
         return itens;
     }
 
-    public void setItens(List<ItemPedidoEntity> itens) {
-        this.itens = itens;
-    }
-
     public List<SituacaoPedidoEntity> getSituacao() {
         return situacao;
-    }
-
-    public void setSituacao(List<SituacaoPedidoEntity> situacao) {
-        this.situacao = situacao;
     }
 
     public Float getValorTotal() {
         return valorTotal;
     }
 
-    public void setValorTotal(Float valorTotal) {
-        this.valorTotal = valorTotal;
-    }
-
     public LocalDateTime getDataPedido() {
         return dataPedido;
     }
 
-    public void setDataPedido(LocalDateTime dataPedido) {
-        this.dataPedido = dataPedido;
-    }
 }

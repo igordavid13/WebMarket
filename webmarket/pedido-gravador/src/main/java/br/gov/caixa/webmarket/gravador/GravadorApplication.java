@@ -1,4 +1,4 @@
-package br.gov.caixa.webmarket.gravador.application;
+package br.gov.caixa.webmarket.gravador;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
