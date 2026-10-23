@@ -33,7 +33,8 @@
 	</developers>
 	
 	<modules>
-		<module>pedido-gravador</module>
+		<module>ms-pedido</module>
+		<module>ms-produto</module>
 		<module>shared-contracts</module>
 	</modules>
 
