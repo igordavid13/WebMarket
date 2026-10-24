@@ -19,6 +19,11 @@ public class MessagingConfig {
     public static final String BAIXA_ESTOQUE_ROUTING = "estoque.baixar";
 
     @Bean
+    public ObjectMapper objectMapper() {
+        return new ObjectMapper().findAndRegisterModules();
+    }
+
+    @Bean
     public DirectExchange gravacaoExchange() {
         return new DirectExchange(EXCHANGE);
     }

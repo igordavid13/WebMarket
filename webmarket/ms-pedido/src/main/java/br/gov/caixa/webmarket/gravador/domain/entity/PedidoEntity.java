@@ -1,6 +1,6 @@
 package br.gov.caixa.webmarket.gravador.domain.entity;
 
-import br.gov.caixa.webmarket.gravador.domain.enums.SituacaoPedidoEnum;
+import br.gov.caixa.webmarket.gravador.domain.enums.SituacaoPedido;
 import jakarta.persistence.*;
 
 import java.time.LocalDateTime;
@@ -16,16 +16,16 @@ public class PedidoEntity {
     @Id
     private UUID id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="cliente_id", nullable = false)
-    private ClienteEntity cliente;
+    @Column(name = "id_cliente", nullable = false)
+    private Long idCliente;
 
     @OrderBy("dataHora ASC, id ASC")
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemPedidoEntity> itens = new ArrayList<>();
 
-    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<SituacaoPedidoEntity> situacao = new ArrayList<>();
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SituacaoPedido situacao;
 
     @Column(nullable = false)
     private Float valorTotal;
@@ -35,15 +35,15 @@ public class PedidoEntity {
 
     protected PedidoEntity() {}
 
-    private PedidoEntity(UUID id, ClienteEntity cliente) {
+    private PedidoEntity(UUID id, Long idCliente) {
         this.id = id;
-        this.cliente = cliente;
-        this.situacao.add(new SituacaoPedidoEntity(this, SituacaoPedidoEnum.CRIADO));
+        this.idCliente = idCliente;
+        this.situacao = SituacaoPedido.CRIADO;
         this.dataPedido = LocalDateTime.now();
     }
 
-    public static PedidoEntity de(UUID id, ClienteEntity cliente) {
-        return new PedidoEntity(id, cliente);
+    public static PedidoEntity de(UUID id, Long idCliente) {
+        return new PedidoEntity(id, idCliente);
     }
 
     public void adicionarItem(ItemPedidoEntity item) {
@@ -55,26 +55,25 @@ public class PedidoEntity {
     }
 
     public void confirmar() {
-        if (!situacao.isEmpty()
-                && situacao.get(situacao.size() - 1).getSituacao() == SituacaoPedidoEnum.CONFIRMADO) {
+        if (situacao == SituacaoPedido.CONFIRMADO) {
             return;
         }
-        situacao.add(new SituacaoPedidoEntity(this, SituacaoPedidoEnum.CONFIRMADO));
+        situacao = SituacaoPedido.CONFIRMADO;
     }
 
     public UUID getId() {
         return id;
     }
 
-    public ClienteEntity getCliente() {
-        return cliente;
+    public Long getIdCliente() {
+        return idCliente;
     }
 
     public List<ItemPedidoEntity> getItens() {
         return itens;
     }
 
-    public List<SituacaoPedidoEntity> getSituacao() {
+    public SituacaoPedido getSituacao() {
         return situacao;
     }
 

@@ -10,10 +10,8 @@ import br.gov.caixa.webmarket.gravador.infrastructure.repository.PedidoOutboxRep
 import br.gov.caixa.webmarket.gravador.infrastructure.config.MessagingConfig;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import br.gov.caixa.webmarket.gravador.infrastructure.repository.ClienteRepository;
 import br.gov.caixa.webmarket.gravador.infrastructure.repository.PedidoRepository;
 import br.gov.caixa.webmarket.gravador.infrastructure.repository.ProdutoRepository;
-import br.gov.caixa.webmarket.gravador.domain.entity.ClienteEntity;
 import br.gov.caixa.webmarket.gravador.domain.entity.ItemPedidoEntity;
 import br.gov.caixa.webmarket.gravador.domain.entity.PedidoEntity;
 import br.gov.caixa.webmarket.contracts.ItemPedidoRequest;
@@ -31,17 +29,15 @@ import java.util.UUID;
 public class GravadorService {
 
     private final PedidoRepository repository;
-    private final ClienteRepository clienteRepository;
     private final ProdutoRepository produtoRepository;
     private final PedidoOutboxRepository outbox;
     private final ObjectMapper objectMapper;
 
-    public GravadorService(PedidoRepository repository, ClienteRepository clienteRepository,
+    public GravadorService(PedidoRepository repository,
                            ProdutoRepository produtoRepository,
                            PedidoOutboxRepository outbox,
                            ObjectMapper objectMapper) {
         this.repository = repository;
-        this.clienteRepository = clienteRepository;
         this.produtoRepository = produtoRepository;
         this.outbox = outbox;
         this.objectMapper = objectMapper;
@@ -52,13 +48,13 @@ public class GravadorService {
         if (repository.existsById(command.identificadorPedido())) {
             return false;
         }
+
         PedidoRequest request = command.dados();
-        ClienteEntity cliente = clienteRepository.findById(request.idCliente())
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Cliente não encontrado: " + request.idCliente()));
-        PedidoEntity pedido = PedidoEntity.de(command.identificadorPedido(), cliente);
+        PedidoEntity pedido = PedidoEntity.de(
+                command.identificadorPedido(), request.idCliente());
         request.itens().forEach(item -> pedido.adicionarItem(criarItem(item, pedido)));
         repository.save(pedido);
+
         BaixarEstoqueCommand baixarEstoque = new BaixarEstoqueCommand(
             command.identificadorPedido(),
             command.identificadorPedido(),
@@ -99,7 +95,7 @@ public class GravadorService {
         List<ItemPedidoView> itens = e.getItens().stream()
                 .map(item -> new ItemPedidoView(item.getId(), item.getProduto().getId().longValue()))
                 .toList();
-        return new PedidoView(e.getId(), e.getCliente().getId(), itens,
+        return new PedidoView(e.getId(), e.getIdCliente(), itens,
                 e.getDataPedido());
     }
 }

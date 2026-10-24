@@ -4,6 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public record PedidoRequest (
-    Integer idCliente,
+    Long idCliente,
     List<ItemPedidoRequest> itens
 ) {}

@@ -1,6 +1,5 @@
 package br.gov.caixa.webmarket.gravador.domain.entity;
 
-import br.gov.caixa.webmarket.gravador.domain.entity.ClienteEntity;
 import br.gov.caixa.webmarket.gravador.domain.entity.ProdutoEntity;
 
 
