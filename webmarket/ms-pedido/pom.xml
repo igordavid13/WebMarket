@@ -74,4 +74,26 @@
         </plugins>
     </build>
 
+    <profiles>
+        <profile>
+            <id>ms-pedido-local</id>
+            <properties>
+                <spring-boot.run.profiles>local</spring-boot.run.profiles>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.apache.qpid</groupId>
+                    <artifactId>qpid-broker</artifactId>
+                    <version>${qpid.version}</version>
+                    <exclusions>
+                        <exclusion>
+                            <groupId>com.sleepycat</groupId>
+                            <artifactId>je</artifactId>
+                        </exclusion>
+                    </exclusions>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
+
 </project>

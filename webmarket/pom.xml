@@ -119,21 +119,10 @@
 					<groupId>com.github.ben-manes.caffeine</groupId>
 					<artifactId>caffeine</artifactId>
 				</dependency>
-				<!-- Filas: Spring AMQP + broker Qpid embarcável (substitui RabbitMQ via Docker) -->
+				<!-- Filas: Spring AMQP -->
 				<dependency>
 					<groupId>org.springframework.boot</groupId>
 					<artifactId>spring-boot-starter-amqp</artifactId>
-				</dependency>
-				<dependency>
-					<groupId>org.apache.qpid</groupId>
-					<artifactId>qpid-broker</artifactId>
-					<version>${qpid.version}</version>
-					<exclusions>
-						<exclusion>
-							<groupId>com.sleepycat</groupId>
-							<artifactId>je</artifactId>
-						</exclusion>
-					</exclusions>
 				</dependency>
 				<!-- Tópicos: broker Kafka in-JVM (substitui Kafka via Docker) -->
 				<dependency>

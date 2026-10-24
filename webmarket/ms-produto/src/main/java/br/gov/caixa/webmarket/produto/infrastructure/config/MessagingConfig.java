@@ -21,6 +21,11 @@ public class MessagingConfig {
     public static final String DEAD_LETTER_QUEUE = "estoque.baixar.dlq";
 
     @Bean
+    ObjectMapper objectMapper() {
+        return new ObjectMapper().findAndRegisterModules();
+    }
+
+    @Bean
     DirectExchange comandoExchange() {
         return new DirectExchange(EXCHANGE);
     }

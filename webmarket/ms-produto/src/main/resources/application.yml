@@ -14,10 +14,6 @@ spring:
       ddl-auto: update
     open-in-view: false
     show-sql: false
-  data:
-    redis:
-      host: ${REDIS_HOST:localhost}
-      port: ${REDIS_PORT:6379}
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
     port: ${RABBIT_PORT:5672}

@@ -1,0 +1,36 @@
+{
+  "name": "webmarket",
+  "modelVersion": "8.0",
+  "authenticationproviders": [
+    {
+      "name": "plain",
+      "type": "Plain",
+      "users": [
+        {
+          "name": "guest",
+          "type": "managed",
+          "password": "guest"
+        }
+      ]
+    }
+  ],
+  "ports": [
+    {
+      "name": "AMQP",
+      "port": "${qpid.amqp_port}",
+      "authenticationProvider": "plain",
+      "virtualhostaliases": [
+        { "name": "defaultAlias", "type": "defaultAlias" },
+        { "name": "nameAlias", "type": "nameAlias" },
+        { "name": "hostnameAlias", "type": "hostnameAlias" }
+      ]
+    }
+  ],
+  "virtualhostnodes": [
+    {
+      "name": "default",
+      "type": "Memory",
+      "defaultVirtualHostNode": "true"
+    }
+  ]
+}
