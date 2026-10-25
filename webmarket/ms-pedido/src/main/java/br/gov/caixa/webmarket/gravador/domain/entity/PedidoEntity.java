@@ -19,7 +19,7 @@ public class PedidoEntity {
     @Column(name = "id_cliente", nullable = false)
     private Long idCliente;
 
-    @OrderBy("dataHora ASC, id ASC")
+    @OrderBy("id ASC")
     @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<ItemPedidoEntity> itens = new ArrayList<>();
 

@@ -11,7 +11,8 @@
           "type": "managed",
           "password": "guest"
         }
-      ]
+      ],
+      "secureOnlyMechanisms": []
     }
   ],
   "ports": [
@@ -19,9 +20,16 @@
       "name": "AMQP",
       "port": "${qpid.amqp_port}",
       "authenticationProvider": "plain",
+      "authenticationMechanisms": [
+        "PLAIN"
+      ],
       "virtualhostaliases": [
+        {
+          "name": "default",
+          "type": "nameAlias",
+          "virtualHostNode": "default"
+        },
         { "name": "defaultAlias", "type": "defaultAlias" },
-        { "name": "nameAlias", "type": "nameAlias" },
         { "name": "hostnameAlias", "type": "hostnameAlias" }
       ]
     }

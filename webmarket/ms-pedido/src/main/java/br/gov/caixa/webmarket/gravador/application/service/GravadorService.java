@@ -78,6 +78,7 @@ public class GravadorService {
         return new ItemPedidoEntity(pedido, produto, BigDecimal.valueOf(produto.getPreco()), item.quantidade());
     }
 
+    @Transactional(readOnly = true)
     public Optional<PedidoView> buscar(UUID id) {
         return repository.findById(id).map(this::toView);
     }
