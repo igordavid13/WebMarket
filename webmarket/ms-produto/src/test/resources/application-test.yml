@@ -1,0 +1,16 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:pact-produto;DB_CLOSE_DELAY=-1
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  kafka:
+    bootstrap-servers: localhost:19092
+    admin:
+      auto-create: false
+  rabbitmq:
+    host: localhost
+    port: 15672
+    listener:
+      simple:
+        auto-startup: false

@@ -391,6 +391,18 @@ cache.invalidate(produtoId);
 3. O `ms-produto` verifica o pacto no próprio pipeline.
 4. Se o provider quebrar o contrato, o build falha.
 
+Execução local dos testes Pact:
+
+```bash
+./mvnw -Pms-pedido-local -pl ms-pedido -Dtest=ProdutoCatalogoConsumerPactTest test
+./mvnw -Pms-produto-local -pl ms-produto -Dtest=ProdutoProviderPactTest test
+```
+
+O teste consumer gera `ms-pedido/target/pacts/ms-pedido-ms-produto.json`. Para verificar
+o contrato no provider, copie esse arquivo para
+`ms-produto/src/test/resources/pacts/ms-pedido-ms-produto.json` antes de executar o
+segundo comando.
+
 ---
 
 ## 15. API

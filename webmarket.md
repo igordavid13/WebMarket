@@ -130,7 +130,7 @@ Cada microsserviço continuará possuindo:
 - seu próprio `pom.xml`;
 - seu próprio código-fonte;
 - sua própria porta HTTP;
-- seu próprio arquivo `application.properties`;
+- seu próprio arquivo `application.yml` e, quando necessário, `application-local.yml`;
 - seu próprio banco H2;
 - seu próprio ciclo de inicialização;
 - seus próprios testes;
@@ -147,14 +147,14 @@ webmarket/
 │   └── src/
 │       ├── main/java/
 │       ├── main/resources/
-│       │   └── application.properties
+│       │   └── application.yml
 │       └── test/java/
 ├── ms-produto/
 │   ├── pom.xml                     # Aplicação Spring Boot independente
 │   └── src/
 │       ├── main/java/
 │       ├── main/resources/
-│       │   └── application.properties
+│       │   └── application.yml
 │       └── test/java/
 ├── pacts/                          # Contratos gerados e verificados
 ├── infra/                          # RabbitMQ, Kafka, Redis e scripts
@@ -189,65 +189,142 @@ O `pom.xml` da raiz funciona como agregador Maven. Ele não é uma aplicação S
 
 As versões de Java, Spring Boot, Pact e plugins Maven devem ser centralizadas no projeto pai quando isso não criar acoplamento de implementação entre os serviços.
 
-### 5.3 Configuração independente do `ms-pedido`
+### 5.3 Configuração independente do `ms-pedido` (YAML)
 
-Arquivo `ms-pedido/src/main/resources/application.properties`:
+Arquivo `ms-pedido/src/main/resources/application.yml`:
 
-```properties
-spring.application.name=ms-pedido
-server.port=8081
+```yaml
+server:
+  port: 8082
+spring:
+  application:
+    name: ms-pedido
+  datasource:
+    url: jdbc:h2:mem:pedidos;DB_CLOSE_DELAY=-1
 
-spring.datasource.url=jdbc:h2:file:./data/webmarket-pedido;DB_CLOSE_DELAY=-1
-spring.datasource.driver-class-name=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=sa
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
 ```
 
 Endpoints principais:
 
 ```text
-http://localhost:8081/pedidos
+http://localhost:8082/interno/pedidos
 ```
 
-### 5.4 Configuração independente do `ms-produto`
+### 5.4 Configuração independente do `ms-produto` (YAML)
 
-Arquivo `ms-produto/src/main/resources/application.properties`:
+Arquivo `ms-produto/src/main/resources/application.yml`:
 
-```properties
-spring.application.name=ms-produto
-server.port=8082
+```yaml
+server:
+  port: 8083
+spring:
+  application:
+    name: ms-produto
 
-spring.datasource.url=jdbc:h2:file:./data/webmarket-produto;DB_CLOSE_DELAY=-1
-spring.datasource.driver-class-name=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=sa
+  datasource:
+    url: jdbc:h2:file:./data/webmarket-produto;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa
 ```
 
 Endpoints principais:
 
 ```text
-http://localhost:8082/produtos
+http://localhost:8083/produtos
 ```
 
-### 5.5 Como executar os dois serviços
+### 5.5 Como executar os dois serviços localmente
 
-Cada aplicação pode ser iniciada separadamente, em terminais diferentes.
+Cada aplicação pode ser iniciada separadamente, em terminais diferentes. A
+configuração local simula a infraestrutura da POC.
 
 Terminal 1:
 
 ```bash
-./mvnw -pl ms-pedido spring-boot:run
+./mvnw -Pms-pedido-local -pl ms-pedido -am -DskipTests install
+./mvnw -Pms-pedido-local -pl ms-pedido spring-boot:run
 ```
 
 Terminal 2:
 
 ```bash
-./mvnw -pl ms-produto spring-boot:run
+./mvnw -Pms-produto-local -pl ms-produto spring-boot:run
 ```
 
-Também é possível entrar no diretório de cada módulo e executar o wrapper Maven do projeto, conforme a estratégia adotada pela equipe. A condição arquitetural é que sejam iniciados como dois processos Spring Boot independentes.
+O `ms-pedido` usa a porta `8082` e inicia o Qpid Broker-J embutido na porta
+`5672`, simulando o RabbitMQ. O `ms-produto` usa a porta `8083` e conecta-se ao
+AMQP em `localhost:5672` e ao Kafka em `localhost:9092`. Atualmente, apenas o
+broker AMQP compatível é iniciado pelo `ms-pedido`; o Kafka ainda é um serviço
+externo e precisa estar disponível em `localhost:9092`. Em produção, RabbitMQ e
+Kafka devem ser serviços externos.
 
-### 5.6 Empacotamento e execução dos artefatos
+### 5.6 Exemplos de execução dos endpoints
+
+#### `ProdutoController` (`ms-produto`)
+
+Listar o catálogo:
+
+```bash
+curl http://localhost:8083/produtos
+```
+
+Consultar um produto:
+
+```bash
+curl http://localhost:8083/produtos/1
+```
+
+Resposta esperada:
+
+```json
+{
+  "id": 1,
+  "nome": "Notebook",
+  "preco": 3500.00,
+  "quantidadeEstoque": 10,
+  "ativo": true
+}
+```
+
+#### `GravadorController` (`ms-pedido`)
+
+Gravar um pedido:
+
+```bash
+curl -X POST http://localhost:8082/interno/pedidos \
+  -H 'Content-Type: application/json' \
+  -d '{
+    "identificadorPedido": "11111111-1111-1111-1111-111111111111",
+    "dados": {
+      "idCliente": 1001,
+      "itens": [
+        {
+          "produto": 1,
+          "quantidade": 2
+        },
+        {
+          "produto": 2,
+          "quantidade": 1
+        }
+      ]
+    }
+  }'
+```
+
+O endpoint retorna `200 OK` quando o pedido é recebido. O `ms-pedido` grava o
+comando de baixa na Outbox para publicação no AMQP.
+
+Consultar o pedido gravado:
+
+```bash
+curl http://localhost:8082/interno/pedidos/11111111-1111-1111-1111-111111111111
+```
+
+### 5.7 Empacotamento e execução dos artefatos
 
 O build da raiz compila os dois módulos:
 
@@ -257,7 +334,7 @@ O build da raiz compila os dois módulos:
 
 Cada módulo gera seu próprio artefato executável Spring Boot. Portanto, é possível executar apenas um serviço, atualizar um serviço sem alterar o outro e testar cada módulo isoladamente.
 
-### 5.7 O que não será feito
+### 5.8 O que não será feito
 
 Não será adotado o seguinte desenho:
 
@@ -270,11 +347,11 @@ uma aplicação Spring Boot
 
 Esse desenho seria um monólito modular, porque Pedido e Produto estariam na mesma JVM, no mesmo ciclo de deploy e no mesmo processo. O projeto do curso utiliza um monorepo multi-module, mas preserva duas fronteiras físicas de execução.
 
-### 5.8 Compartilhamento de código
+### 5.9 Compartilhamento de código
 
 Os módulos não devem compartilhar entidades JPA, Aggregate Roots, repositories ou regras de domínio. Se existir código comum, ele deve se limitar a elementos técnicos pequenos e estáveis. Os contratos REST e de mensageria devem ser tratados como contratos versionados, não como classes de domínio compartilhadas que obriguem os dois serviços a evoluir juntos.
 
-### 5.9 Relação com o PACT
+### 5.10 Relação com o PACT
 
 A organização em um único repositório simplifica o PACT:
 
@@ -693,6 +770,54 @@ Provider da mensagem: ms-pedido
 
 O `ms-produto` declara o payload de que precisa. O `ms-pedido` é verificado como produtor do comando. Isso testa o schema sem precisar subir o RabbitMQ.
 
+### 13.7 Execução do Pact implementado
+
+O projeto possui atualmente um Pact REST implementado para a interação
+`GET /produtos/1`:
+
+- consumer: `ms-pedido`;
+- provider: `ms-produto`;
+- versão Pact JVM: `4.6.14`;
+- cliente usado pelo consumer:
+  `ms-pedido/src/main/java/br/gov/caixa/webmarket/gravador/infrastructure/client/ProdutoCatalogoClient.java`;
+- teste consumer:
+  `ms-pedido/src/test/java/br/gov/caixa/webmarket/gravador/contract/ProdutoCatalogoConsumerPactTest.java`;
+- teste provider:
+  `ms-produto/src/test/java/br/gov/caixa/webmarket/produto/contract/ProdutoProviderPactTest.java`.
+
+Gerar o contrato no `ms-pedido`:
+
+```bash
+./mvnw -Pms-pedido-local -pl ms-pedido \
+  -Dtest=ProdutoCatalogoConsumerPactTest test
+```
+
+O arquivo é gerado em:
+
+```text
+ms-pedido/target/pacts/ms-pedido-ms-produto.json
+```
+
+Compartilhar o arquivo com o provider:
+
+```bash
+mkdir -p ms-produto/src/test/resources/pacts
+cp ms-pedido/target/pacts/ms-pedido-ms-produto.json \
+   ms-produto/src/test/resources/pacts/ms-pedido-ms-produto.json
+```
+
+Verificar o contrato no `ms-produto`:
+
+```bash
+./mvnw -Pms-produto-local -pl ms-produto \
+  -Dtest=ProdutoProviderPactTest test
+```
+
+O provider inicia uma aplicação Spring Boot em porta aleatória, usa H2 em
+memória e semeia o estado `produto ativo existe`. Assim, a verificação não
+depende dos processos locais do `ms-pedido`, do Qpid, do Kafka ou do cache de
+execução.
+
 ## 14. ADR: o que é
 
 ADR significa **Architecture Decision Record**, ou Registro de Decisão Arquitetural.
@@ -762,42 +887,54 @@ No projeto Spring Boot com Spring Data JPA e Hibernate:
 
 O starter fornece Spring Data JPA e Hibernate ORM; o H2 é o driver JDBC usado em desenvolvimento e nos testes.
 
-### 15.2 `ms-pedido/src/main/resources/application.properties`
+### 15.2 `ms-pedido/src/main/resources/application.yml`
 
-```properties
-spring.datasource.url=jdbc:h2:file:./data/webmarket-pedido;DB_CLOSE_DELAY=-1
-spring.datasource.driver-class-name=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=sa
+```yaml
+spring:
+  datasource:
+    url: jdbc:h2:mem:pedidos;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
 
 # Desenvolvimento acadêmico. Se Flyway/Liquibase for adotado, prefira validate/none.
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
 ```
 
-### 15.3 `ms-produto/src/main/resources/application.properties`
+### 15.3 `ms-produto/src/main/resources/application.yml`
 
-```properties
-spring.datasource.url=jdbc:h2:file:./data/webmarket-produto;DB_CLOSE_DELAY=-1
-spring.datasource.driver-class-name=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=sa
-spring.jpa.hibernate.ddl-auto=update
-spring.jpa.show-sql=true
+```yaml
+spring:
+  datasource:
+    url: jdbc:h2:file:./data/webmarket-produto;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: sa
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
 ```
 
 Mesmo usando H2 local, os arquivos são diferentes. Isso preserva a regra arquitetural de banco por microsserviço.
 
 ### 15.4 Perfil de teste
 
-Nos testes, cada serviço pode usar H2 em memória em `src/test/resources/application-test.properties` e ativar o perfil `test` com `@ActiveProfiles("test")`:
+Nos testes, cada serviço pode usar H2 em memória em `src/test/resources/application-test.yml` e ativar o perfil `test` com `@ActiveProfiles("test")`:
 
-```properties
-spring.datasource.url=jdbc:h2:mem:webmarket;DB_CLOSE_DELAY=-1
-spring.datasource.driver-class-name=org.h2.Driver
-spring.datasource.username=sa
-spring.datasource.password=sa
-spring.jpa.hibernate.ddl-auto=create-drop
+```yaml
+spring:
+  datasource:
+    url: jdbc:h2:mem:webmarket;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
 ```
 
 Como cada microsserviço executa sua própria suíte de testes, o nome `webmarket` pode ser reutilizado. Para testes que iniciem ambos no mesmo processo, use nomes diferentes, como `webmarket_pedido_test` e `webmarket_produto_test`.

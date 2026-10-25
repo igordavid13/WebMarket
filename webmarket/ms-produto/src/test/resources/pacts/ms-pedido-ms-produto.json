@@ -1,0 +1,114 @@
+{
+  "consumer": {
+    "name": "ms-pedido"
+  },
+  "interactions": [
+    {
+      "comments": {
+        "testname": "br.gov.caixa.webmarket.gravador.contract.ProdutoCatalogoConsumerPactTest.deveConsultarProduto(MockServer)",
+        "text": [
+
+        ]
+      },
+      "description": "consulta de produto pelo identificador",
+      "key": "a6d8836a",
+      "pending": false,
+      "providerStates": [
+        {
+          "name": "produto ativo existe"
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "path": "/produtos/1"
+      },
+      "response": {
+        "body": {
+          "content": {
+            "ativo": true,
+            "id": 1,
+            "nome": "Notebook",
+            "preco": 3500.0,
+            "quantidadeEstoque": 10
+          },
+          "contentType": "application/json; charset=UTF-8",
+          "encoded": false
+        },
+        "headers": {
+          "Content-Type": [
+            "application/json; charset=UTF-8"
+          ]
+        },
+        "matchingRules": {
+          "body": {
+            "$.ativo": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.id": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            },
+            "$.nome": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "type"
+                }
+              ]
+            },
+            "$.preco": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "decimal"
+                }
+              ]
+            },
+            "$.quantidadeEstoque": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "integer"
+                }
+              ]
+            }
+          },
+          "header": {
+            "Content-Type": {
+              "combine": "AND",
+              "matchers": [
+                {
+                  "match": "regex",
+                  "regex": "application/json(;\\s?charset=[\\w\\-]+)?"
+                }
+              ]
+            }
+          }
+        },
+        "status": 200
+      },
+      "transport": "http",
+      "type": "Synchronous/HTTP"
+    }
+  ],
+  "metadata": {
+    "pact-jvm": {
+      "version": "4.6.14"
+    },
+    "pactSpecification": {
+      "version": "4.0"
+    }
+  },
+  "provider": {
+    "name": "ms-produto"
+  }
+}
