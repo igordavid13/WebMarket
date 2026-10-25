@@ -1,4 +1,4 @@
-package br.gov.caixa.webmarket.gravador.infrastructure.config;
+/*package br.gov.caixa.webmarket.gravador.infrastructure.config;
 
 import org.apache.qpid.server.SystemLauncher;
 import org.apache.qpid.server.SystemLauncherListener;
@@ -43,4 +43,4 @@ public class EmbeddedBrokerConfig {
             broker.shutdown();
         }
     }
-}
+}*/

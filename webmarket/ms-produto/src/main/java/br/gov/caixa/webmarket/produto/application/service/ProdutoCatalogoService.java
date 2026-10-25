@@ -2,14 +2,15 @@ package br.gov.caixa.webmarket.produto.application.service;
 
 import br.gov.caixa.webmarket.produto.application.view.ProdutoView;
 import br.gov.caixa.webmarket.produto.infrastructure.repository.ProdutoRepository;
-import com.github.benmanes.caffeine.cache.Cache;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.Duration;
 import java.util.List;
 
 import static org.springframework.http.HttpStatus.NOT_FOUND;
@@ -18,23 +19,24 @@ import static org.springframework.http.HttpStatus.NOT_FOUND;
 public class ProdutoCatalogoService {
     private static final String CHAVE_CATALOGO = "produtos:catalogo";
     private static final String PREFIXO_PRODUTO = "produto:";
+    private static final Duration TTL_CACHE = Duration.ofMinutes(10);
 
     private final ProdutoRepository produtos;
-    private final Cache<String, String> cache;
+    private final StringRedisTemplate redisTemplate;
     private final ObjectMapper objectMapper;
 
     public ProdutoCatalogoService(
             ProdutoRepository produtos,
-            Cache<String, String> cache,
+            StringRedisTemplate redisTemplate,
             ObjectMapper objectMapper) {
         this.produtos = produtos;
-        this.cache = cache;
+        this.redisTemplate = redisTemplate;
         this.objectMapper = objectMapper;
     }
 
     @Transactional(readOnly = true)
     public List<ProdutoView> listar() {
-        String catalogoEmCache = cache.getIfPresent(CHAVE_CATALOGO);
+        String catalogoEmCache = redisTemplate.opsForValue().get(CHAVE_CATALOGO);
         if (catalogoEmCache != null) {
             return desserializarLista(catalogoEmCache);
         }
@@ -48,7 +50,7 @@ public class ProdutoCatalogoService {
 
     @Transactional(readOnly = true)
     public ProdutoView buscar(Integer id) {
-        String produtoEmCache = cache.getIfPresent(chaveProduto(id));
+        String produtoEmCache = redisTemplate.opsForValue().get(chaveProduto(id));
         if (produtoEmCache != null) {
             return desserializarProduto(id, produtoEmCache);
         }
@@ -56,24 +58,27 @@ public class ProdutoCatalogoService {
         ProdutoView produto = produtos.findById(id)
                 .map(ProdutoView::de)
                 .orElseThrow(() -> new ResponseStatusException(NOT_FOUND, "Produto não encontrado: " + id));
-        cache.put(chaveProduto(id), serializar(produto));
+
+        redisTemplate.opsForValue().set(chaveProduto(id), serializar(produto), TTL_CACHE);
         return produto;
     }
 
     public void invalidarCache(Integer produtoId) {
-        cache.invalidateAll(List.of(CHAVE_CATALOGO, chaveProduto(produtoId)));
+        redisTemplate.delete(List.of(CHAVE_CATALOGO, chaveProduto(produtoId)));
     }
 
     private void salvarCatalogoNoCache(List<ProdutoView> catalogo) {
-        cache.put(CHAVE_CATALOGO, serializar(catalogo));
-        catalogo.forEach(produto -> cache.put(chaveProduto(produto.id()), serializar(produto)));
+        redisTemplate.opsForValue().set(CHAVE_CATALOGO, serializar(catalogo), TTL_CACHE);
+        catalogo.forEach(produto ->
+                redisTemplate.opsForValue().set(chaveProduto(produto.id()), serializar(produto), TTL_CACHE)
+        );
     }
 
     private List<ProdutoView> desserializarLista(String json) {
         try {
             return objectMapper.readValue(json, new TypeReference<>() {});
         } catch (JsonProcessingException exception) {
-            cache.invalidate(CHAVE_CATALOGO);
+            redisTemplate.delete(CHAVE_CATALOGO);
             return listar();
         }
     }
@@ -82,7 +87,7 @@ public class ProdutoCatalogoService {
         try {
             return objectMapper.readValue(json, ProdutoView.class);
         } catch (JsonProcessingException exception) {
-            cache.invalidate(chaveProduto(id));
+            redisTemplate.delete(chaveProduto(id));
             return buscar(id);
         }
     }

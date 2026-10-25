@@ -34,7 +34,12 @@ spring:
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-
+  cache:
+    type: redis
+    data:
+      redis:
+        host: localhost
+        port: 6379
 management:
   endpoints:
     web:

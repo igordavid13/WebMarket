@@ -5,6 +5,8 @@ import br.gov.caixa.webmarket.gravador.application.service.GravadorService;
 import br.gov.caixa.webmarket.contracts.PedidoView;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.ResponseStatus;
 
 import java.util.UUID;
 
@@ -19,6 +21,7 @@ public class GravadorController {
     }
 
     @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<Void> gravar(@RequestBody GravarPedidoCommand command) {
         gravador.gravar(command);
         return ResponseEntity.ok().build();
