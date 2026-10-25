@@ -35,6 +35,12 @@ public class MessagingConfig {
         return new DirectExchange(DEAD_LETTER_EXCHANGE);
     }
 
+    /*
+     * Configuração da fila de baixa de estoque e sua fila de dead letter.
+     * A fila de baixa de estoque é configurada para enviar mensagens não processadas para a fila de dead letter.
+     * Esta configuração é aplicavel no RabbitMQ, onde a fila de baixa de estoque é durável e possui uma exchange de dead letter associada.
+    */
+/*
     @Bean
     Queue baixaEstoqueQueue() {
         return QueueBuilder.durable(QUEUE)
@@ -61,6 +67,37 @@ public class MessagingConfig {
             @Qualifier("deadLetterExchange") DirectExchange deadLetterExchange) {
         return BindingBuilder.bind(baixaEstoqueDeadLetterQueue).to(deadLetterExchange).with(ROUTING_KEY);
     }
+
+ */
+
+    /*
+     * Configuração da fila de baixa de estoque e sua fila de dead letter para o Qpid Broker-J.
+     */
+    @Bean
+    Queue baixaEstoqueQueue() {
+        return QueueBuilder.durable(QUEUE)
+                .build();
+    }
+
+    @Bean
+    Queue baixaEstoqueDeadLetterQueue() {
+        return QueueBuilder.durable(DEAD_LETTER_QUEUE).build();
+    }
+
+    @Bean
+    Binding baixaEstoqueBinding(
+            @Qualifier("baixaEstoqueQueue") Queue baixaEstoqueQueue,
+            @Qualifier("comandoExchange") DirectExchange comandoExchange) {
+        return BindingBuilder.bind(baixaEstoqueQueue).to(comandoExchange).with(ROUTING_KEY);
+    }
+
+    @Bean
+    Binding baixaEstoqueDeadLetterBinding(
+            @Qualifier("baixaEstoqueDeadLetterQueue") Queue baixaEstoqueDeadLetterQueue,
+            @Qualifier("deadLetterExchange") DirectExchange deadLetterExchange) {
+        return BindingBuilder.bind(baixaEstoqueDeadLetterQueue).to(deadLetterExchange).with(ROUTING_KEY);
+    }
+
 
     @Bean
     MessageConverter jsonMessageConverter(ObjectMapper objectMapper) {

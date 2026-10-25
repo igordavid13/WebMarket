@@ -16,8 +16,8 @@ spring:
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
     port: ${RABBIT_PORT:5672}
-    virtual-host: "/"
-    #virtual-host: "${RABBIT_VIRTUAL_HOST:/}"
+    #virtual-host: "/"
+    virtual-host: "${RABBIT_VIRTUAL_HOST:default}"
     username: ${RABBIT_USER:guest}
     password: ${RABBIT_PASS:guest}
     listener:
@@ -49,3 +49,9 @@ management:
     web:
       exposure:
         include: health,info
+
+
+#logging:
+#  level:
+#    org.apache.qpid: DEBUG
+#    org.apache.qpid.server: TRACE

@@ -9,7 +9,7 @@
         <relativePath>../pom.xml</relativePath>
     </parent>
 
-    <groupId>br.com.caixa.pix</groupId>
+    <groupId>br.gov.caixa.webmarket.contracts</groupId>
     <artifactId>shared-contracts</artifactId>
     <name>shared-contracts</name>
     <description>shared-contracts</description>

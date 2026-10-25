@@ -1,6 +1,6 @@
 {
   "name": "webmarket",
-  "modelVersion": "8.0",
+  "modelVersion": "9.0",
   "authenticationproviders": [
     {
       "name": "plain",
@@ -29,8 +29,14 @@
           "type": "nameAlias",
           "virtualHostNode": "default"
         },
-        { "name": "defaultAlias", "type": "defaultAlias" },
-        { "name": "hostnameAlias", "type": "hostnameAlias" }
+        {
+          "name": "defaultAlias",
+          "type": "defaultAlias"
+        },
+        {
+          "name": "hostnameAlias",
+          "type": "hostnameAlias"
+        }
       ]
     }
   ],
@@ -38,7 +44,8 @@
     {
       "name": "default",
       "type": "Memory",
-      "defaultVirtualHostNode": "true"
+      "defaultVirtualHostNode": true,
+      "virtualHostInitialConfiguration": "{\"type\": \"Memory\", \"name\": \"default\"}"
     }
   ]
 }

@@ -34,7 +34,17 @@ public class EmbeddedBrokerConfig {
                 "qpid.work_dir", workDirectory));
 
         broker = new SystemLauncher(new SystemLauncherListener.DefaultSystemLauncherListener());
+
+        System.out.println("QPID CONFIG = "
+                + getClass().getClassLoader()
+                .getResource("embedded-qpid-config.json"));
+
+        Thread.sleep(5000);
+
+        System.out.println("Starting broker...");
         broker.startup(attributes);
+        System.out.println("Broker startup completed");
+
     }
 
     @PreDestroy

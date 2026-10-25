@@ -17,8 +17,8 @@ spring:
   rabbitmq:
     host: ${RABBIT_HOST:localhost}
     port: ${RABBIT_PORT:5672}
-    #virtual-host: "${RABBIT_VIRTUAL_HOST:default}"
-    virtual-host: "/"
+    virtual-host: "${RABBIT_VIRTUAL_HOST:default}"
+    #virtual-host: "/"
     username: ${RABBIT_USER:guest}
     password: ${RABBIT_PASS:guest}
     listener:
@@ -46,3 +46,8 @@ management:
 webmarket:
   outbox:
     fixed-delay: ${OUTBOX_FIXED_DELAY:1000}
+
+#logging:
+#  level:
+#    com.rabbitmq: DEBUG
+#    org.springframework.amqp: DEBUG

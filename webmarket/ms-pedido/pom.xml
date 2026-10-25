@@ -7,7 +7,7 @@
 		<groupId>br.gov.caixa</groupId>
 		<artifactId>webmarket</artifactId>
 		<version>0.0.1-SNAPSHOT</version>
-		<relativePath>../pom.xml</relativePath>
+		<!-- <relativePath>../pom.xml</relativePath> -->
 	</parent>
 	
 	<artifactId>ms-pedido</artifactId>
@@ -34,6 +34,17 @@
 			<artifactId>spring-boot-starter-cache</artifactId>
 		</dependency>
 		<dependency>
+			<groupId>org.apache.qpid</groupId>
+			<artifactId>qpid-broker</artifactId>
+			<version>${qpid.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.sleepycat</groupId>
+					<artifactId>je</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-starter-kafka</artifactId>
 		</dependency>
@@ -51,7 +62,7 @@
             <scope>runtime</scope>
         </dependency>        
         <dependency>
-            <groupId>br.com.caixa.pix</groupId>
+            <groupId>br.gov.caixa.webmarket.contracts</groupId>
             <artifactId>shared-contracts</artifactId>
             <version>${project.version}</version>
         </dependency>
@@ -61,14 +72,6 @@
             <version>${pact.version}</version>
             <scope>test</scope>
         </dependency>
-        <!--
-		<dependency>
-            <groupId>au.com.dius.pact.provider</groupId>
-            <artifactId>junit5</artifactId>
-            <version>${pact.version}</version>
-            <scope>test</scope>
-        </dependency>
-        -->
 	</dependencies>
 
     <build>
@@ -86,19 +89,6 @@
             <properties>
                 <spring-boot.run.profiles>local</spring-boot.run.profiles>
             </properties>
-            <dependencies>
-                <dependency>
-                    <groupId>org.apache.qpid</groupId>
-                    <artifactId>qpid-broker</artifactId>
-                    <version>${qpid.version}</version>
-                    <exclusions>
-                        <exclusion>
-                            <groupId>com.sleepycat</groupId>
-                            <artifactId>je</artifactId>
-                        </exclusion>
-                    </exclusions>
-                </dependency>
-            </dependencies>
         </profile>
     </profiles>
 

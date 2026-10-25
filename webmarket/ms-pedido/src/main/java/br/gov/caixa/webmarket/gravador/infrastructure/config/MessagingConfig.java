@@ -31,7 +31,8 @@ public class MessagingConfig {
     @Bean
     public Queue gravacaoQueue() {
         return QueueBuilder.durable(FILA)
-                .withArgument("x-dead-letter-exchange", DLX)
+                // Removido para executar com Qpid, pois o Qpid não suporta a configuração de DLX diretamente na fila.
+                // .withArgument("x-dead-letter-exchange", DLX)
                 .build();
     }
 
