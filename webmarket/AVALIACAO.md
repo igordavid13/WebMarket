@@ -14,20 +14,20 @@ Marketplace distribuído orientado a DDD com dois microsserviços segregados (`m
 
 ## Evidências por critério
 
-### 1. Decomposição de domínio — Nível auto-atribuído: Excelente
+### 1. Decomposição de domínio
 * **Evidência:** 
   * Segregação explícita em dois microsserviços autônomos e um módulo comum: `ms-pedido` (Bounded Context Pedidos), `ms-produto` (Bounded Context Catálogo/Estoque) e `shared-contracts` (contratos de integração).
   * **Bases Segregadas:** `ms-pedido` utiliza H2 em memória (`jdbc:h2:mem:pedidos`) isolado na porta `8082`, enquanto `ms-produto` utiliza H2 persistente em arquivo local (`jdbc:h2:file:./data/webmarket-produto`) na porta `8083`. Não há tabelas compartilhadas nem acoplamento de schema.
   * **Documentação:** Especificação detalhada em `docs/arquitetura.md` (seções 4 e 5) e fundamentado em `docs/adr/ADR-001-bounded-contexts.md` e `docs/adr/ADR-002-bancos-segregados.md`.
 
-### 2. Comunicação assíncrona — Nível auto-atribuído: Excelente
+### 2. Comunicação assíncrona
 * **Evidência:**
   * **Comandos assíncronos:** O `ms-pedido` despacha o comando imperativo `BaixarEstoqueCommand` através da classe `BaixaEstoquePublisher.java` para a Exchange direta e durável `webmarket.commands` com routing key `estoque.baixar`.
   * **Consumidor durável:** O `ms-produto` escuta a fila durável `estoque.baixar.q` através da classe `BaixaEstoqueListener.java`, delegando a execução para `BaixaEstoqueService.java`.
   * **Eventos de domínio:** Publicação de eventos pós-processamento (`EstoqueBaixadoEvent`) no tópico Kafka `estoque-eventos` gerenciado via `OutboxRelay.java`.
   * **Garantia de entrega:** *At-least-once* assegurada pelo Transactional Outbox antes do envio e confirmação manual/transacional no broker RabbitMQ.
 
-### 3. Idempotência e consistência — Nível auto-atribuído: Excelente
+### 3. Idempotência e consistência
 * **Evidência:**
   * **Chave de Idempotência:** Cada mensagem de baixa carrega um `eventId` único (UUID).
   * **Deduplicação no Banco:** A classe `BaixaEstoqueService.java` no `ms-produto` consulta a tabela `EVENTO_PROCESSADO` antes de qualquer movimentação:
@@ -41,14 +41,14 @@ Marketplace distribuído orientado a DDD com dois microsserviços segregados (`m
   * **Na API HTTP:** `GravadorController` e `GravadorService` asseguram unicidade por `identificadorPedido`.
   * **Documentação:** `docs/adr/ADR-006-idempotencia.md` e `docs/adr/ADR-008-consistencia-eventual-compensacao.md`.
 
-### 4. Cache — Nível auto-atribuído: Excelente
+### 4. Cache
 * **Evidência:**
   * **Implementação:** Classe `ProdutoCatalogoService.java` no `ms-produto` utilizando `StringRedisTemplate` com serialização Jackson.
   * **Estratégia Cache-Aside:** Consultas via `GET /produtos/{id}` buscam a chave `produto:<id>` no Redis (TTL de 10 min); em caso de cache-miss, carregam do H2 e populam o Redis.
   * **Invalidação Transacional Explícita:** O método `invalidarCache(produtoId)` expurga `produto:<id>` e `produtos:catalogo` imediatamente após o commit da baixa de estoque.
   * **Documentação:** `docs/adr/ADR-005-redis-cache-catalogo.md`.
 
-### 5. Resiliência — Nível auto-atribuído: Excelente
+### 5. Resiliência
 * **Evidência:**
   * **Desacoplamento Temporal Comprovado:** Com o `ms-produto` completamente desligado, o `ms-pedido` aceita requisições HTTP (retornando `201 Created`), grava o pedido e enfileira no RabbitMQ. A mensagem permanece segura com status `Ready: 1` no broker sem perda de dados.
   * **Recuperação Automática:** Ao reiniciar o `ms-produto`, o `@RabbitListener` conecta-se e consome a fila pendente automaticamente.
@@ -56,7 +56,7 @@ Marketplace distribuído orientado a DDD com dois microsserviços segregados (`m
   * **Dead Letter Queue:** Configuração de DLQ `gravacao.dlq` para mensagens corrompidas ou com falhas definitivas.
   * **Documentação:** `docs/adr/ADR-003-rabbitmq-comando-baixa.md` e `docs/adr/ADR-007-transactional-outbox.md`.
 
-### 6. Testabilidade — Nível auto-atribuído: Excelente
+### 6. Testabilidade
 * **Evidência:**
   * **Contract Testing (Pact):**
     * *Consumidor:* `ms-pedido/src/test/java/br/gov/caixa/webmarket/contract/ProdutoConsumerContractTest.java` gera o contrato V4 `ms-pedido/target/pacts/ms-pedido-ms-produto.json`.
@@ -68,7 +68,7 @@ Marketplace distribuído orientado a DDD com dois microsserviços segregados (`m
     ```
   * **Documentação:** `docs/adr/ADR-009-contract-testing-pact.md`.
 
-### 7. Decisões arquiteturais — Nível auto-atribuído: Excelente
+### 7. Decisões arquiteturais
 * **Evidência:**
   * Conjunto formal de 9 Architecture Decision Records estruturados em `docs/adr/`:
     * `ADR-001-bounded-contexts.md`: Separação em dois contextos autônomos.
@@ -81,7 +81,7 @@ Marketplace distribuído orientado a DDD com dois microsserviços segregados (`m
     * `ADR-008-consistencia-eventual-compensacao.md`: Consistência eventual com compensação.
     * `ADR-009-contract-testing-pact.md`: Testes de contrato orientados pelo consumidor.
 
-### 8. Uso crítico de IA — Nível auto-atribuído: Excelente
+### 8. Uso crítico de IA
 * **Como usamos IA e o que validamos manualmente:**
   * A IA foi utilizada como aceleradora técnica para desenhar esboços iniciais da arquitetura, gerar esqueletos de classes Spring Boot, propor topologias de mensageria e estruturar minutas de documentação técnica e ADRs.
   * **Validação Crítica e Intervenções Manuais da Equipe:**
@@ -90,7 +90,7 @@ Marketplace distribuído orientado a DDD com dois microsserviços segregados (`m
     3. *Isolamento no Teste do Provedor Pact:* O teste `ProdutoProviderContractTest` falhava ao subir o contexto por tentar se conectar a instâncias externas do Kafka e da Outbox. Interviemos configurando anotações `@MockitoBean` nas interfaces de mensageria para permitir a execução pura e determinística do contrato HTTP.
     4. *Ajuste de Tipos e Schemas:* Alinhamos manualmente todos os contratos para refletir o schema real (ID numérico `Integer`, BigDecimal para valores monetários e nomes canônicos de tabelas H2).
 
-### 9. Execução — Nível auto-atribuído: Excelente
+### 9. Execução
 * **Perfil Declarado:** **Perfil A (Docker)**
 * **Como rodar:**
 
