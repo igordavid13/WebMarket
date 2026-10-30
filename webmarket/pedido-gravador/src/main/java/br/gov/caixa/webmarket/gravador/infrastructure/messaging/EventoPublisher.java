@@ -1,19 +1,38 @@
-package br.com.caixa.pix.gravador.infrastructure.messaging;
+package br.gov.caixa.webmarket.gravador.infrastructure.messaging;
 
-import br.com.caixa.pix.contracts.PedidoGravadoEvent;
-import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Component;
+import br.gov.caixa.webmarket.contracts.PedidoGravadoEvent;
+import br.gov.caixa.webmarket.gravador.domain.entity.EventoPendenteEntity;
+import io.quarkus.scheduler.Scheduled;
+import io.smallrye.reactive.messaging.kafka.Record;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.LockModeType;
+import jakarta.transaction.Transactional;
+import org.eclipse.microprofile.reactive.messaging.Channel;
+import org.eclipse.microprofile.reactive.messaging.Emitter;
+import java.util.concurrent.TimeUnit;
 
-@Component
+@ApplicationScoped
 public class EventoPublisher {
+    private final EntityManager entityManager;
+    private final Emitter<Record<String, PedidoGravadoEvent>> eventos;
 
-    private final KafkaTemplate<String, PedidoGravadoEvent> kafka;
-
-    public EventoPublisher(KafkaTemplate<String, PedidoGravadoEvent> kafka) {
-        this.kafka = kafka;
+    public EventoPublisher(EntityManager entityManager,
+            @Channel("pedidos-gravados") Emitter<Record<String, PedidoGravadoEvent>> eventos) {
+        this.entityManager = entityManager;
+        this.eventos = eventos;
     }
 
-    public void publicar(PedidoGravadoEvent evento) {
-        kafka.send(KafkaConfig.TOPICO, evento.identificadorPedido().toString(), evento);
+    @Scheduled(every = "1s", concurrentExecution = Scheduled.ConcurrentExecution.SKIP)
+    @Transactional
+    public void publicarPendentes() throws Exception {
+        var pendentes = entityManager.createQuery("from EventoPendenteEntity order by dataPedido", EventoPendenteEntity.class)
+                .setLockMode(LockModeType.PESSIMISTIC_WRITE).setMaxResults(20).getResultList();
+        for (EventoPendenteEntity pendente : pendentes) {
+            PedidoGravadoEvent evento = pendente.toEvent();
+            eventos.send(Record.of(evento.identificadorPedido().toString(), evento))
+                    .toCompletableFuture().get(10, TimeUnit.SECONDS);
+            entityManager.remove(pendente);
+        }
     }
 }

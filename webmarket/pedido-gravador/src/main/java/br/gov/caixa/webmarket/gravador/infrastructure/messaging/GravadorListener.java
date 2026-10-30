@@ -1,30 +1,29 @@
-package br.com.caixa.pix.gravador.infrastructure.messaging;
+package br.gov.caixa.webmarket.gravador.infrastructure.messaging;
 
-import br.com.caixa.pix.contracts.GravarPedidoCommand;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.stereotype.Component;
+import br.gov.caixa.webmarket.contracts.GravarPedidoCommand;
+import br.gov.caixa.webmarket.gravador.application.service.GravadorService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import io.smallrye.reactive.messaging.annotations.Blocking;
+import io.vertx.core.json.JsonObject;
+import jakarta.enterprise.context.ApplicationScoped;
+import org.eclipse.microprofile.faulttolerance.Retry;
+import org.eclipse.microprofile.reactive.messaging.Incoming;
 
-@Component
-public class GravacaoListener {
-
-    private static final Logger log = LoggerFactory.getLogger(GravacaoListener.class);
-
+@ApplicationScoped
+public class GravadorListener {
     private final GravadorService gravador;
+    private final ObjectMapper mapper;
 
-    public GravacaoListener(GravadorService gravador) {
+    public GravadorListener(GravadorService gravador, ObjectMapper mapper) {
         this.gravador = gravador;
+        this.mapper = mapper;
     }
 
-    @RabbitListener(queues = MessagingConfig.FILA)
-    public void aoReceber(GravarComprovanteCommand command) {
-        gravador.gravar(command); // idempotente sob redelivery
-    }
-
-    @RabbitListener(queues = MessagingConfig.DLQ)
-    public void aoCairNaDlq(GravarPedidoCommand command) {
-        log.warn("Pedido {} caiu na DLQ após esgotar as tentativas",
-                command.identificadorPedido());
+    @Incoming("gravacao")
+    @Blocking
+    @Retry(maxRetries = 2, delay = 1000, jitter = 0)
+    public void aoReceber(JsonObject payload) throws JsonProcessingException {
+        gravador.gravar(mapper.readValue(payload.encode(), GravarPedidoCommand.class));
     }
 }

@@ -1,9 +1,7 @@
-package br.gov.caixa.webmarket.pedido.domain.entity;
+package br.gov.caixa.webmarket.gravador.domain.entity;
 
 import jakarta.persistence.*;
 
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "cliente")
@@ -19,8 +17,6 @@ public class ClienteEntity {
     @Column(nullable = false, unique = true)
     private String cpf;
 
-    @OneToMany(mappedBy = "cliente")
-    private List<PedidoEntity> pedidos = new ArrayList<>();
 
     protected ClienteEntity() {}
 
@@ -51,10 +47,6 @@ public class ClienteEntity {
 
     public void setCpf(String cpf) {
         this.cpf = cpf;
-    }
-
-    public List<PedidoEntity> getPedidos() {
-        return pedidos;
     }
 
 }

@@ -1,4 +1,4 @@
-package br.gov.caixa.webmarket.pedido.domain.enums;
+package br.gov.caixa.webmarket.gravador.domain.enums;
 
 public enum SituacaoPedidoEnum {
     CRIADO(3, "CRIADO"),

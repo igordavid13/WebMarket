@@ -1,7 +1,9 @@
 package br.gov.caixa.webmarket.gravador.infrastructure.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
+import br.gov.caixa.webmarket.gravador.domain.entity.PedidoEntity;
+import io.quarkus.hibernate.orm.panache.PanacheRepositoryBase;
+import jakarta.enterprise.context.ApplicationScoped;
 import java.util.UUID;
 
-public interface PedidoRepository extends JpaRepository<PedidoEntity, UUID> {
-}
+@ApplicationScoped
+public class PedidoRepository implements PanacheRepositoryBase<PedidoEntity, UUID> {}

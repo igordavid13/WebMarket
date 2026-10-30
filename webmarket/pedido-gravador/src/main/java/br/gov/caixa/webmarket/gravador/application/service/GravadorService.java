@@ -1,41 +1,40 @@
 package br.gov.caixa.webmarket.gravador.application.service;
 
-import br.com.caixa.pix.contracts.PedidoGravadoEvent;
-import br.com.caixa.pix.contracts.PedidoView;
-import br.com.caixa.pix.contracts.GravarPedidoCommand;
-import org.springframework.stereotype.Service;
-
-import java.time.LocalDateTime;
+import br.gov.caixa.webmarket.contracts.GravarPedidoCommand;
+import br.gov.caixa.webmarket.contracts.PedidoView;
+import br.gov.caixa.webmarket.gravador.domain.entity.EventoPendenteEntity;
+import br.gov.caixa.webmarket.gravador.domain.entity.PedidoEntity;
+import br.gov.caixa.webmarket.gravador.infrastructure.repository.PedidoRepository;
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.persistence.EntityManager;
+import jakarta.transaction.Transactional;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 import java.util.Optional;
 import java.util.UUID;
 
-@Service
+@ApplicationScoped
 public class GravadorService {
-
     private final PedidoRepository repository;
-    private final EventoPublisher eventos;
+    private final EntityManager entityManager;
 
-    public GravadorService(PedidoRepository repository, EventoPublisher eventos) {
+    public GravadorService(PedidoRepository repository, EntityManager entityManager) {
         this.repository = repository;
-        this.eventos = eventos;
+        this.entityManager = entityManager;
     }
 
-    public boolean gravar(GravarPedidoCommand command) {
-        if (repository.existsById(command.identificadorPedido())) {
+    @Transactional
+    public boolean gravar(@NotNull @Valid GravarPedidoCommand command) {
+        if (repository.findByIdOptional(command.identificadorPedido()).isPresent()) {
             return false;
         }
-        repository.save(PedidoEntity.de(command.identificadorPedido(), command.dados()));
-        eventos.publicar(new PedidoGravadoEvent(command.identificadorPedido(), LocalDateTime.now()));
+        repository.persist(PedidoEntity.de(command.identificadorPedido(), command.dados()));
+        entityManager.persist(new EventoPendenteEntity(command.identificadorPedido(), command.dados().dataPedido()));
         return true;
     }
 
+    @Transactional
     public Optional<PedidoView> buscar(UUID id) {
-        return repository.findById(id).map(this::toView);
-    }
-
-    private PedidoView toView(PedidoEntity e) {
-        return new PedidoView(e.getId(), e.getNome(), e.getNumeroDocumento(),
-                e.getValorTransacao(), e.getChavePixDestino(),
-                e.getDataHoraTransacao(), e.getDataHoraGravacao());
+        return repository.findByIdOptional(id).map(PedidoEntity::toView);
     }
 }

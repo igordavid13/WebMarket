@@ -1,0 +1,27 @@
+{
+  "users": [
+    {
+      "name": "webmarket",
+      "password_hash": "AQIDBFzNB+nkRjbU6/AYRBIzr4dtQxbwljVr90wK/ADkkLHa",
+      "hashing_algorithm": "rabbit_password_hashing_sha256",
+      "tags": ["administrator"]
+    }
+  ],
+  "vhosts": [{"name": "/"}],
+  "permissions": [
+    {"user": "webmarket", "vhost": "/", "configure": ".*", "write": ".*", "read": ".*"}
+  ],
+  "exchanges": [
+    {"name": "gravacao.ex", "vhost": "/", "type": "direct", "durable": true, "auto_delete": false, "internal": false, "arguments": {}},
+    {"name": "gravacao.dlx", "vhost": "/", "type": "fanout", "durable": true, "auto_delete": false, "internal": false, "arguments": {}}
+  ],
+  "queues": [
+    {"name": "gravacao.q", "vhost": "/", "durable": true, "auto_delete": false,
+      "arguments": {"x-dead-letter-exchange": "gravacao.dlx", "x-dead-letter-routing-key": "gravacao.q"}},
+    {"name": "gravacao.dlq", "vhost": "/", "durable": true, "auto_delete": false, "arguments": {}}
+  ],
+  "bindings": [
+    {"source": "gravacao.ex", "vhost": "/", "destination": "gravacao.q", "destination_type": "queue", "routing_key": "gravacao", "arguments": {}},
+    {"source": "gravacao.dlx", "vhost": "/", "destination": "gravacao.dlq", "destination_type": "queue", "routing_key": "gravacao.q", "arguments": {}}
+  ]
+}

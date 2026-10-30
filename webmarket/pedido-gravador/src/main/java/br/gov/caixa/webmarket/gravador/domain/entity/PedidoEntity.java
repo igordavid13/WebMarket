@@ -1,90 +1,50 @@
 package br.gov.caixa.webmarket.gravador.domain.entity;
 
+import br.gov.caixa.webmarket.contracts.ItemPedido;
+import br.gov.caixa.webmarket.contracts.PedidoRequest;
+import br.gov.caixa.webmarket.contracts.PedidoView;
+import br.gov.caixa.webmarket.gravador.domain.enums.SituacaoPedidoEnum;
 import jakarta.persistence.*;
-
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @Entity
 @Table(name = "pedido")
 public class PedidoEntity {
-
     @Id
     private UUID id;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name="cliente_id", nullable = false)
-    private ClienteEntity cliente;
-
-    @OneToMany(mappedBy = "pedido")
+    @Column(name = "cliente_id", nullable = false)
+    private Integer cliente;
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderColumn(name = "ordem")
     private List<ItemPedidoEntity> itens = new ArrayList<>();
-
-    @OneToMany(mappedBy = "pedido")
+    @OneToMany(mappedBy = "pedido", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SituacaoPedidoEntity> situacao = new ArrayList<>();
-
-    @Column(nullable = false)
-    private Float valorTotal;
-
-    @Column(name = "data_pedido")
+    @Column(name = "data_pedido", nullable = false)
     private LocalDateTime dataPedido;
 
     protected PedidoEntity() {}
 
-    private PedidoEntity(UUID id, PedidoRequest pedidoRequest) {
-        this.id = id;
-        this.cliente = pedidoRequest.getCliente();
-        this.itens = pedidoRequest.getItens();
-        this.situacao = pedidoRequest.getSituacao();
-        this.valorTotal = pedidoRequest.getValorTotal();
-        this.dataPedido = pedidoRequest.getDataPedido();
+    public static PedidoEntity de(UUID id, PedidoRequest dados) {
+        PedidoEntity pedido = new PedidoEntity();
+        pedido.id = id;
+        pedido.cliente = dados.cliente();
+        pedido.dataPedido = dados.dataPedido();
+        dados.itens().forEach(item -> pedido.itens.add(new ItemPedidoEntity(pedido, item.produto(), item.quantidade())));
+        pedido.situacao.add(new SituacaoPedidoEntity(pedido, SituacaoPedidoEnum.CRIADO));
+        return pedido;
     }
 
-    public UUID getId() {
-        return id;
+    public PedidoView toView() {
+        return new PedidoView(id, cliente,
+                itens.stream().map(item -> new ItemPedido(item.getProduto(), item.getQuantidade())).toList(), dataPedido);
     }
 
-    public void setId(UUID id) {
-        this.id = id;
-    }
-
-    public ClienteEntity getCliente() {
-        return cliente;
-    }
-
-    public void setCliente(ClienteEntity cliente) {
-        this.cliente = cliente;
-    }
-
-    public List<ItemPedidoEntity> getItens() {
-        return itens;
-    }
-
-    public void setItens(List<ItemPedidoEntity> itens) {
-        this.itens = itens;
-    }
-
-    public List<SituacaoPedidoEntity> getSituacao() {
-        return situacao;
-    }
-
-    public void setSituacao(List<SituacaoPedidoEntity> situacao) {
-        this.situacao = situacao;
-    }
-
-    public Float getValorTotal() {
-        return valorTotal;
-    }
-
-    public void setValorTotal(Float valorTotal) {
-        this.valorTotal = valorTotal;
-    }
-
-    public LocalDateTime getDataPedido() {
-        return dataPedido;
-    }
-
-    public void setDataPedido(LocalDateTime dataPedido) {
-        this.dataPedido = dataPedido;
-    }
+    public UUID getId() { return id; }
+    public Integer getCliente() { return cliente; }
+    public List<ItemPedidoEntity> getItens() { return itens; }
+    public List<SituacaoPedidoEntity> getSituacao() { return situacao; }
+    public LocalDateTime getDataPedido() { return dataPedido; }
 }
