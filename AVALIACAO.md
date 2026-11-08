@@ -22,17 +22,20 @@ Versões: Quarkus 3.20.3 | Java 21
 * **Evidência:** Planejada a integração síncrona via MicroProfile REST Client (`ProdutoClient`) no `servico-pedido`, consumindo `servico-produto` com anotações de Fault Tolerance (`@Timeout`, `@Fallback`, `@CircuitBreaker`).
 
 ### 3. Persistência com Panache
-* **Nível auto-atribuído:** 3 (Avançado)
-* **Evidência:** 
-  * Persistência com Hibernate ORM com Panache utilizando banco de dados H2 em memória (`jdbc:h2:mem:...`).
-  * Adoção justificada do padrão **Active Record** (`PanacheEntityBase`) para permitir controle explícito da estratégia de chave primária através de `@SequenceGenerator` (`allocationSize = 1`, `initialValue = 10`), evitando colisões de chave com dados pré-carregados pelo `import.sql`.
-  * Operações de escrita protegidas por transações explícitas via `@Transactional`.
-  * Carga de dados de teste isolada para ambientes `%dev` e `%test`.
-  * Implementação de consultas customizadas além do CRUD básico:
-    * `Produto.findComEstoqueDisponivel()` e `Produto.findDisponivelParaVenda()`
-    * `Pedido.findByStatus()`, `Pedido.findByCliente()` e `Pedido.countByStatus()`
-  * **Classes:** `br.gov.caixa.webmarket.domain.entity.Produto`, `br.gov.caixa.webmarket.pedido.domain.entity.Pedido` e `ItemPedido`.
-  * **Testes que provam:** `ProdutoResourceTest.deveFiltrarProdutosComEstoque()`, `ProdutoResourceTest.deveExcluirProdutoComSucesso()`, `PedidoResourceTest.deveFiltrarPedidosPorStatus()`.
+Nível auto-atribuído: 3 (Avançado)
+Evidência:
+- Padrão **Repository** adotado via `PanacheRepository<T>`:
+  - `servico-produto`: `ProdutoRepository.java` e `ProdutoService.java`
+  - `servico-pedido`: `PedidoRepository.java` e `PedidoService.java`
+- Escolha justificada entre Repository e Active Record documentada no `README.md`.
+- Estratégia de ID via `@SequenceGenerator(initialValue = 10)` para isolamento do `import.sql`.
+- Consultas customizadas além do CRUD:
+  - `ProdutoRepository.findComEstoqueDisponivel()` e `findByNome()`
+  - `PedidoRepository.findByStatus()` e `countByStatus()`
+- Transações gerenciadas no Service via `@Transactional`.
+- Testes dedicados de repositório:
+  - `ProdutoRepositoryTest.java` (consultas customizadas e carga do import.sql)
+  - `PedidoRepositoryTest.java` (filtros e contagens de pedidos)
 
 ### 4. Validação e tratamento de erros
 * **Nível auto-atribuído:** 1 (Básico - Conclusão do corpo único prevista para Aula 6 / 11/11)
@@ -56,13 +59,16 @@ Versões: Quarkus 3.20.3 | Java 21
   * **Testes que provam:** `PedidoResourceTest.deveResponderHealthCheckUp()`, `PedidoResourceTest.deveExporMetricasPrometheus()`, `ProdutoResourceTest.deveResponderHealthCheckUp()`, `ProdutoResourceTest.deveExporMetricasPrometheus()`.
 
 ### 7. Testes
-* **Nível auto-atribuído:** 2 (Proficiente)
-* **Evidência:** 
-  * Suíte automatizada com cobertura de caminhos felizes e caminhos de erro (404, estoque insuficiente, remoção).
-  * Execução em memória sem dependência de Docker, brokers ou banco externo.
-  * `mvn verify` executado com sucesso e status verde a partir da raiz do monorepo agregador.
-  * **Contagem de testes:** 12 testes no total (6 no `servico-produto` e 6 no `servico-pedido`), todos passando.
-  * **Classes:** `ProdutoResourceTest.java` e `PedidoResourceTest.java`.
+Nível auto-atribuído: 2 (Proficiente)
+Evidência:
+- Testes automatizados executados com `@QuarkusTest` e H2 em memória sem dependência de Docker.
+- Classes de teste de integração HTTP (REST-assured):
+  - `servico-produto`: `ProdutoResourceTest` (7 testes: 200, 201 Location, 204, 404, filtros, health e métricas).
+  - `servico-pedido`: `PedidoResourceTest` (6 testes: 200, 201 Location, 404, filtro status, health e métricas).
+- Classes de teste de persistência direta:
+  - `ProdutoRepositoryTest` (2 testes)
+  - `PedidoRepositoryTest` (2 testes)
+- Contagem total: 17 testes executados com status verde no build agregador (`mvn test` / `mvn verify`).
 
 ### 8. Uso crítico de IA
 * **Como usamos IA e o que validamos manualmente:** 

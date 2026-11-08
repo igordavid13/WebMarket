@@ -49,7 +49,38 @@ webmarket/
 - **`servico-produto` (8081):** Expõe recursos para cadastro de catálogo, verificação de saldos e controle de estoque.
 - **Banco de Dados:** Cada microsserviço possui sua própria instância isolada de H2 Database em memória (`jdbc:h2:mem:...`), inicializada com dados de teste em dev/test via `import.sql`.
 
----
+## Decisões Arquiteturais de Persistência
+
+### Padrão Adotado: Panache Repository vs. Active Record
+Optou-se pelo padrão **Repository (`PanacheRepository<T>`)** em vez de Active Record por:
+1. **Separação Estrita de Responsabilidades:** As entidades (`Produto`, `Pedido`, `ItemPedido`) permanecem como POJOs JPA sem métodos estáticos acoplados ao banco.
+2. **Camadas Claras:** O fluxo segue rigorosamente `Recurso REST -> Serviço de Domínio -> Repositório Panache`, centralizando transações (`@Transactional`) e regras nos serviços.
+3. **Testabilidade:** Permite criar testes específicos para a camada de persistência (`ProdutoRepositoryTest`, `PedidoRepositoryTest`) e isolar regras com injeção de dependência via CDI (`@ApplicationScoped` e `@Inject`).
+
+### Estratégia de Geração de Identificadores
+
+Foi adotado `@SequenceGenerator` com sequence própria (`initialValue = 10` e `allocationSize = 1`). Essa estratégia evita colisões de chave primária com os registros de carga inicial definidos no `import.sql` (IDs 1 a 3) e garante compatibilidade transparente com bancos relacionais em produção.
+
+## Contratos REST
+
+### servico-produto (Porta 8081)
+| Operação | Verbo | URI | Sucesso | Erros |
+| :--- | :--- | :--- | :--- | :--- |
+| Listar produtos | `GET` | `/produtos` | `200 OK` | `500` |
+| Consultar por ID | `GET` | `/produtos/{id}` | `200 OK` | `404 Not Found` |
+| Checar disponibilidade | `GET` | `/produtos/{id}/disponibilidade` | `200 OK` | `404`, `409 Conflict` |
+| Cadastrar produto | `POST` | `/produtos` | `201 Created` (`Location`) | `400 Bad Request` |
+| Atualizar produto | `PUT` | `/produtos/{id}` | `200 OK` | `400`, `404 Not Found` |
+| Excluir produto | `DELETE`| `/produtos/{id}` | `204 No Content` | `404 Not Found` |
+
+### servico-pedido (Porta 8080)
+| Operação | Verbo | URI | Sucesso | Erros |
+| :--- | :--- | :--- | :--- | :--- |
+| Listar pedidos (com filtro) | `GET` | `/pedidos?status={s}&cliente={c}` | `200 OK` | `500` |
+| Consultar por ID | `GET` | `/pedidos/{id}` | `200 OK` | `404 Not Found` |
+| Criar pedido | `POST` | `/pedidos` | `201 Created` (`Location`) | `400 Bad Request` |
+| Atualizar status | `PATCH`| `/pedidos/{id}/status?novoStatus={s}` | `200 OK` | `400`, `404 Not Found` |
+| Excluir pedido | `DELETE`| `/pedidos/{id}` | `204 No Content` | `404 Not Found` |
 
 ## 4. Requisitos
 

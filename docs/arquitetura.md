@@ -82,3 +82,32 @@ Ambos os microsserviços expõem endpoints padronizados de monitoramento nativo:
   * `/q/health/ready`: Valida a conectividade ativa do pool de conexões do datasource H2.
 * **Métricas Prometheus (`/q/metrics`):**
   * Contabilizadores customizados com anotação `@Counted` para medir a volumetria de operações de negócio (`pedidos_consultados_total` e `produtos_consultados_total`), além das métricas padrão de runtime da JVM e requisições HTTP.
+
+## Padrão de Camadas Internas e CDI
+
+Cada microsserviço adota arquitetura em três camadas estritas com injeção via CDI:
+
+```text
+[ Requisição HTTP ]
+        │
+        ▼
+[ Resource / Controller ] (@ApplicationScoped)
+  - Validação de entrada (@Valid)
+  - Serialização e status REST (Nível 2)
+  - Métricas (@Counted)
+        │
+        ▼ @Inject
+[ Service de Domínio ] (@ApplicationScoped)
+  - Regras de negócio
+  - Controle transacional (@Transactional)
+        │
+        ▼ @Inject
+[ Repository Panache ] (@ApplicationScoped, PanacheRepository<T>)
+  - Consultas customizadas e CRUD
+        │
+        ▼
+[ Banco H2 em Memória ]
+
+Escopos CDI: @ApplicationScoped utilizado por padrão em Resources, Services e Repositories.
+
+Transações: @Transactional do pacote jakarta.transaction concentrado nos métodos de escrita dos Services.
