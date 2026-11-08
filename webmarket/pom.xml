@@ -8,9 +8,8 @@
     <packaging>pom</packaging>
     <name>WebMarket</name>
     <modules>
-        <module>shared-contracts</module>
-        <module>pedido-gravador</module>
-        <module>pedido-api</module>
+        <module>servico-pedido</module>
+        <module>servico-produto</module>
     </modules>
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
