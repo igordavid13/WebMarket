@@ -1,6 +1,7 @@
 package br.gov.caixa.webmarket.produto.application.controller;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -11,6 +12,7 @@ import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
 @QuarkusTest
+@TestSecurity(user = "admin", roles = "admin")
 public class ProdutoResourceTest {
 
     @Test

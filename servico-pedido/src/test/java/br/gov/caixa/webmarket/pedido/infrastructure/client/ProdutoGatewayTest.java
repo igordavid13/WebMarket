@@ -3,6 +3,7 @@ package br.gov.caixa.webmarket.pedido.infrastructure.client;
 import br.gov.caixa.webmarket.pedido.domain.exception.ProdutoIndisponivelNegocioException;
 import io.quarkus.test.InjectMock;
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import io.smallrye.faulttolerance.api.CircuitBreakerMaintenance;
 import jakarta.inject.Inject;
@@ -21,6 +22,7 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
+import io.restassured.RestAssured;
 
 @QuarkusTest
 public class ProdutoGatewayTest {
@@ -31,6 +33,18 @@ public class ProdutoGatewayTest {
 
     @Inject
     CircuitBreakerMaintenance circuitos;
+
+    @BeforeEach
+    void configurar() {
+        circuitos.resetAll();
+        RestAssured.authentication = RestAssured.preemptive().basic("admin", "admin123");
+    }
+
+    @AfterEach
+    void limpar() {
+        circuitos.resetAll();
+        RestAssured.reset();
+    }
 
     @BeforeEach
     @AfterEach

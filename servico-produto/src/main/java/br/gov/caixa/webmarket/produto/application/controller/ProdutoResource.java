@@ -3,6 +3,7 @@ package br.gov.caixa.webmarket.produto.application.controller;
 import br.gov.caixa.webmarket.produto.domain.entity.Produto;
 import br.gov.caixa.webmarket.produto.domain.service.ProdutoService;
 import io.micrometer.core.annotation.Counted;
+import io.quarkus.security.Authenticated;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -18,6 +19,7 @@ import java.util.List;
 @Path("/produtos")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Authenticated
 @ApplicationScoped
 public class ProdutoResource {
 

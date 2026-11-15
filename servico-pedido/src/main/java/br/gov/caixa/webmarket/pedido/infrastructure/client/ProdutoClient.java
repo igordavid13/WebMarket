@@ -5,10 +5,12 @@ import io.quarkus.rest.client.reactive.ClientExceptionMapper;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
+import org.eclipse.microprofile.rest.client.annotation.RegisterClientHeaders;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @Path("/produtos")
 @RegisterRestClient(configKey = "produtos")
+@RegisterClientHeaders(ProdutoAuthHeaderFactory.class)
 @Produces(MediaType.APPLICATION_JSON)
 public interface ProdutoClient {
 
@@ -28,6 +30,6 @@ public interface ProdutoClient {
         if (status == Response.Status.CONFLICT.getStatusCode()) {
             return new ProdutoIndisponivelNegocioException("Estoque insuficiente para o produto solicitado");
         }
-        return null; // Status 5xx mantém comportamento padrão (falha técnica)
+        return null;
     }
 }

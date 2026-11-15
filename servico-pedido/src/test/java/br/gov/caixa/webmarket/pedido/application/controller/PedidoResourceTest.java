@@ -1,12 +1,12 @@
 package br.gov.caixa.webmarket.pedido.application.controller;
 
 import io.quarkus.test.junit.QuarkusTest;
+import io.quarkus.test.security.TestSecurity;
 import io.restassured.http.ContentType;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
-import static java.util.Optional.empty;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import br.gov.caixa.webmarket.pedido.infrastructure.client.ProdutoClient;
@@ -17,6 +17,9 @@ import java.math.BigDecimal;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.when;
+import io.restassured.RestAssured;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 
 @QuarkusTest
 public class PedidoResourceTest {
@@ -24,6 +27,16 @@ public class PedidoResourceTest {
     @InjectMock
     @RestClient
     ProdutoClient produtoClient;
+
+    @BeforeEach
+    void configurarAutenticacao() {
+        RestAssured.authentication = RestAssured.preemptive().basic("admin", "admin123");
+    }
+
+    @AfterEach
+    void limparAutenticacao() {
+        RestAssured.reset();
+    }
 
     @Test
     @DisplayName("Critério 1: Deve listar pedidos retornando HTTP 200")
