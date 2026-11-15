@@ -82,6 +82,12 @@ Foi adotado `@SequenceGenerator` com sequence própria (`initialValue = 10` e `a
 | Atualizar status | `PATCH`| `/pedidos/{id}/status?novoStatus={s}` | `200 OK` | `400`, `404 Not Found` |
 | Excluir pedido | `DELETE`| `/pedidos/{id}` | `204 No Content` | `404 Not Found` |
 
+## Política de Tolerância a Falhas (Fault Tolerance)
+
+Na integração síncrona entre `servico-pedido` e `servico-produto` (`ProdutoGateway`), distinguimos falhas técnicas de respostas de negócio:
+- **Respostas de Negócio (`404` produto inexistente ou `409` estoque insuficiente):** Mapeadas via `@ClientExceptionMapper` para `ProdutoIndisponivelNegocioException`, resultando em **HTTP 422** imediato. Como repetir a consulta não altera o saldo nem cria o produto, configuramos `abortOn` no `@Retry` e `skipOn` no `@CircuitBreaker` e `@Fallback`.
+- **Falhas Técnicas (Timeout de 500 ms, recusa de conexão ou HTTP `5xx`):** Tratadas como instabilidades transitórias. A operação `GET` de consulta de estoque é idempotente e segura para retentativas (`@Retry(maxRetries = 2)`). Caso 4 chamadas falhem (`requestVolumeThreshold = 4`), o `@CircuitBreaker` abre para evitar esgotamento de threads, acionando o `@Fallback` que devolve **HTTP 503 Service Unavailable** sem persistir o pedido.
+
 ## 4. Requisitos
 
 - **Java Development Kit (JDK) 21** configurado no `JAVA_HOME` e no `PATH`.

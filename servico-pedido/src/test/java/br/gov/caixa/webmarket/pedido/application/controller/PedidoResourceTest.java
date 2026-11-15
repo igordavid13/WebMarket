@@ -8,9 +8,21 @@ import org.junit.jupiter.api.Test;
 import static io.restassured.RestAssured.given;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import br.gov.caixa.webmarket.pedido.infrastructure.client.ProdutoClient;
+import br.gov.caixa.webmarket.pedido.infrastructure.client.ProdutoResponse;
+import io.quarkus.test.InjectMock;
+import org.eclipse.microprofile.rest.client.inject.RestClient;
+import java.math.BigDecimal;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.when;
 
 @QuarkusTest
 public class PedidoResourceTest {
+
+    @InjectMock
+    @RestClient
+    ProdutoClient produtoClient;
 
     @Test
     @DisplayName("Critério 1: Deve listar pedidos retornando HTTP 200")
@@ -38,7 +50,8 @@ public class PedidoResourceTest {
                 ]
             }
             """;
-
+        when(produtoClient.verificarDisponibilidade(anyLong(), anyInt()))
+                .thenReturn(new ProdutoResponse(1L, "Teclado Mecânico", new BigDecimal("250.00"), 10));
         given()
                 .contentType(ContentType.JSON)
                 .body(novoPedidoJson)
