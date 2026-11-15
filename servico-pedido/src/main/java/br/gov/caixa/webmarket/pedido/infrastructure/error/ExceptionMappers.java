@@ -9,6 +9,7 @@ import jakarta.validation.Path;
 import org.jboss.resteasy.reactive.RestResponse;
 import org.jboss.resteasy.reactive.server.ServerExceptionMapper;
 import java.util.List;
+import io.quarkus.security.ForbiddenException;
 
 public class ExceptionMappers {
 
@@ -48,5 +49,13 @@ public class ExceptionMappers {
 
     private static RestResponse<ErroResposta> resposta(ErroResposta erro) {
         return RestResponse.ResponseBuilder.<ErroResposta>create(erro.status()).entity(erro).build();
+    }
+
+    @ServerExceptionMapper
+    public RestResponse<ErroResposta> acessoNegado(ForbiddenException e) {
+        String mensagem = (e.getMessage() == null || e.getMessage().isBlank())
+                ? "Seu papel não permite esta operação"
+                : e.getMessage();
+        return resposta(ErroResposta.de(403, "Acesso negado", mensagem));
     }
 }

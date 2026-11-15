@@ -15,11 +15,15 @@ import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.List;
+import static br.gov.caixa.webmarket.produto.infrastructure.security.Papeis.ADMIN;
+import static br.gov.caixa.webmarket.produto.infrastructure.security.Papeis.CLIENTE;
+import jakarta.annotation.security.DenyAll;
+import jakarta.annotation.security.RolesAllowed;
 
 @Path("/produtos")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-@Authenticated
+@DenyAll
 @ApplicationScoped
 public class ProdutoResource {
 
@@ -27,12 +31,14 @@ public class ProdutoResource {
     ProdutoService produtoService;
 
     @GET
+    @RolesAllowed({CLIENTE, ADMIN})
     @Counted(value = "produtos_consultados_total", description = "Total de listagens de produtos realizadas")
     public List<Produto> listar(@QueryParam("somenteDisponiveis") @DefaultValue("false") boolean somenteDisponiveis) {
         return produtoService.listar(somenteDisponiveis);
     }
 
     @GET
+    @RolesAllowed({CLIENTE, ADMIN})
     @Path("/{id}")
     public Produto buscarPorId(@PathParam("id") Long id) {
         return produtoService.buscarPorId(id);
@@ -45,6 +51,7 @@ public class ProdutoResource {
     }
 
     @POST
+    @RolesAllowed(ADMIN)
     public Response criar(@NotNull @Valid Produto produto, @Context UriInfo uriInfo) {
         Produto criado = produtoService.cadastrar(produto);
         URI location = uriInfo.getAbsolutePathBuilder().path(String.valueOf(criado.getId())).build();
@@ -52,12 +59,14 @@ public class ProdutoResource {
     }
 
     @PUT
+    @RolesAllowed(ADMIN)
     @Path("/{id}")
     public Produto atualizar(@PathParam("id") Long id, @NotNull @Valid Produto dados) {
         return produtoService.atualizar(id, dados);
     }
 
     @DELETE
+    @RolesAllowed(ADMIN)
     @Path("/{id}")
     public Response excluir(@PathParam("id") Long id) {
         produtoService.excluir(id);
