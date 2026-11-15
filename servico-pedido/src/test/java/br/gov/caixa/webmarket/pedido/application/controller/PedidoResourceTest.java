@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
+import static java.util.Optional.empty;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import br.gov.caixa.webmarket.pedido.infrastructure.client.ProdutoClient;
@@ -64,12 +65,14 @@ public class PedidoResourceTest {
     }
 
     @Test
-    @DisplayName("Critério 1: Deve retornar 404 para ID inexistente")
+    @DisplayName("Critério 1 e 4: Deve retornar 404 com corpo padrão para ID inexistente")
     public void deveRetornar404ParaPedidoInexistente() {
         given()
                 .when().get("/pedidos/999999")
                 .then()
-                .statusCode(404);
+                .statusCode(404)
+                .body("status", equalTo(404))
+                .body("erro", equalTo("Pedido não encontrado"));
     }
 
     @Test
@@ -81,6 +84,27 @@ public class PedidoResourceTest {
                 .then()
                 .statusCode(200)
                 .body("status", everyItem(equalTo("CONFIRMADO")));
+    }
+
+    @Test
+    @DisplayName("Critério 4: Deve retornar 400 com corpo padronizado ao enviar pedido sem cliente ou sem itens")
+    public void deveRetornar400PedidoInvalido() {
+        String pedidoInvalido = """
+            {
+                "clienteNome": "",
+                "itens": []
+            }
+            """;
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(pedidoInvalido)
+                .when().post("/pedidos")
+                .then()
+                .statusCode(400)
+                .body("status", equalTo(400))
+                .body("erro", equalTo("Requisição inválida"))
+                .body("mensagens.size()", greaterThanOrEqualTo(2));
     }
 
     @Test

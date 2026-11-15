@@ -6,6 +6,7 @@ import io.micrometer.core.annotation.Counted;
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Context;
@@ -34,10 +35,8 @@ public class PedidoResource {
 
     @GET
     @Path("/{id}")
-    public Response buscarPorId(@PathParam("id") Long id) {
-        return pedidoService.buscarPorIdOpcional(id)
-                .map(p -> Response.ok(p).build())
-                .orElse(Response.status(Response.Status.NOT_FOUND).build());
+    public Pedido buscarPorId(@PathParam("id") Long id) {
+        return pedidoService.buscarPorId(id);
     }
 
     @POST
@@ -49,26 +48,14 @@ public class PedidoResource {
 
     @PATCH
     @Path("/{id}/status")
-    public Response atualizarStatus(@PathParam("id") Long id, @QueryParam("novoStatus") String novoStatus) {
-        if (novoStatus == null || novoStatus.isBlank()) {
-            return Response.status(Response.Status.BAD_REQUEST).entity("{\"erro\": \"novoStatus é obrigatório\"}").build();
-        }
-
-        if (pedidoService.buscarPorIdOpcional(id).isEmpty()) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-
-        Pedido atualizado = pedidoService.atualizarStatus(id, novoStatus);
-        return Response.ok(atualizado).build();
+    public Pedido atualizarStatus(@PathParam("id") Long id, @QueryParam("novoStatus") @NotBlank String novoStatus) {
+        return pedidoService.atualizarStatus(id, novoStatus);
     }
 
     @DELETE
     @Path("/{id}")
     public Response excluir(@PathParam("id") Long id) {
-        boolean excluido = pedidoService.excluir(id);
-        if (!excluido) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
+        pedidoService.excluir(id);
         return Response.noContent().build();
     }
 }

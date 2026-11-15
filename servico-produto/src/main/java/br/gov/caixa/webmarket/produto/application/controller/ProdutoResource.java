@@ -32,27 +32,14 @@ public class ProdutoResource {
 
     @GET
     @Path("/{id}")
-    public Response buscarPorId(@PathParam("id") Long id) {
-        return produtoService.buscarPorIdOpcional(id)
-                .map(p -> Response.ok(p).build())
-                .orElse(Response.status(Response.Status.NOT_FOUND).build());
+    public Produto buscarPorId(@PathParam("id") Long id) {
+        return produtoService.buscarPorId(id);
     }
 
     @GET
     @Path("/{id}/disponibilidade")
-    public Response verificarDisponibilidade(@PathParam("id") Long id, @QueryParam("quantidade") @DefaultValue("1") Integer quantidade) {
-        var opt = produtoService.buscarPorIdOpcional(id);
-        if (opt.isEmpty()) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-
-        Produto produto = opt.get();
-        if (produto.getQuantidadeEstoque() < quantidade) {
-            return Response.status(Response.Status.CONFLICT)
-                    .entity("{\"erro\": \"Estoque insuficiente\", \"disponivel\": " + produto.getQuantidadeEstoque() + "}")
-                    .build();
-        }
-        return Response.ok(produto).build();
+    public Produto verificarDisponibilidade(@PathParam("id") Long id, @QueryParam("quantidade") @DefaultValue("1") Integer quantidade) {
+        return produtoService.verificarDisponibilidade(id, quantidade);
     }
 
     @POST
@@ -64,21 +51,14 @@ public class ProdutoResource {
 
     @PUT
     @Path("/{id}")
-    public Response atualizar(@PathParam("id") Long id, @NotNull @Valid Produto dados) {
-        if (produtoService.buscarPorIdOpcional(id).isEmpty()) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
-        Produto atualizado = produtoService.atualizar(id, dados);
-        return Response.ok(atualizado).build();
+    public Produto atualizar(@PathParam("id") Long id, @NotNull @Valid Produto dados) {
+        return produtoService.atualizar(id, dados);
     }
 
     @DELETE
     @Path("/{id}")
     public Response excluir(@PathParam("id") Long id) {
-        boolean excluido = produtoService.excluir(id);
-        if (!excluido) {
-            return Response.status(Response.Status.NOT_FOUND).build();
-        }
+        produtoService.excluir(id);
         return Response.noContent().build();
     }
 }

@@ -2,6 +2,7 @@ package br.gov.caixa.webmarket.pedido.domain.service;
 
 import br.gov.caixa.webmarket.pedido.domain.entity.ItemPedido;
 import br.gov.caixa.webmarket.pedido.domain.entity.Pedido;
+import br.gov.caixa.webmarket.pedido.domain.exception.PedidoNaoEncontradoException;
 import br.gov.caixa.webmarket.pedido.infrastructure.client.ProdutoGateway;
 import br.gov.caixa.webmarket.pedido.infrastructure.repository.PedidoRepository;
 import jakarta.enterprise.context.ApplicationScoped;
@@ -36,7 +37,7 @@ public class PedidoService {
 
     public Pedido buscarPorId(Long id) {
         return pedidoRepository.findByIdOptional(id)
-                .orElseThrow(() -> new NotFoundException("Pedido não encontrado com id: " + id));
+                .orElseThrow(() -> new PedidoNaoEncontradoException(id));
     }
 
     @Transactional
@@ -67,7 +68,9 @@ public class PedidoService {
     }
 
     @Transactional
-    public boolean excluir(Long id) {
-        return pedidoRepository.deleteById(id);
+    public void excluir(Long id) {
+        if (!pedidoRepository.deleteById(id)) {
+            throw new PedidoNaoEncontradoException(id);
+        }
     }
 }

@@ -1,10 +1,7 @@
 package br.gov.caixa.webmarket.pedido.domain.exception;
 
-import jakarta.ws.rs.WebApplicationException;
-import jakarta.ws.rs.core.Response;
-
-public class ServicoProdutoIndisponivelException extends WebApplicationException {
+public class ServicoProdutoIndisponivelException extends RuntimeException {
     public ServicoProdutoIndisponivelException() {
-        super("Serviço de produtos temporariamente indisponível", Response.Status.SERVICE_UNAVAILABLE);
+        super("Serviço de produtos indisponível; tente novamente em instantes");
     }
 }

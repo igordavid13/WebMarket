@@ -6,6 +6,7 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
+import static java.util.Optional.empty;
 import static org.hamcrest.CoreMatchers.*;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 
@@ -44,12 +45,14 @@ public class ProdutoResourceTest {
     }
 
     @Test
-    @DisplayName("Critério 1: Deve retornar 404 para ID inexistente")
+    @DisplayName("Critério 1 e 4: Deve retornar 404 com corpo padrão para produto inexistente")
     public void deveRetornar404ParaProdutoInexistente() {
         given()
                 .when().get("/produtos/999999")
                 .then()
-                .statusCode(404);
+                .statusCode(404)
+                .body("status", equalTo(404))
+                .body("erro", equalTo("Produto não encontrado"));
     }
 
     @Test
@@ -100,5 +103,49 @@ public class ProdutoResourceTest {
                 .when().get("/produtos/3")
                 .then()
                 .statusCode(404);
+    }
+
+    @Test
+    @DisplayName("Critério 4: Deve retornar 400 com corpo padronizado quando entrada for inválida")
+    public void deveRetornar400ComCorpoPadrao() {
+        String jsonInvalido = """
+            {
+                "nome": "",
+                "preco": -10.00,
+                "quantidadeEstoque": -1
+            }
+            """;
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(jsonInvalido)
+                .when().post("/produtos")
+                .then()
+                .statusCode(400)
+                .body("status", equalTo(400))
+                .body("erro", equalTo("Requisição inválida"))
+                .body("mensagens.size()", greaterThanOrEqualTo(3));
+    }
+
+    @Test
+    @DisplayName("Critério 4: Deve retornar 409 com corpo padronizado ao cadastrar produto duplicado")
+    public void deveRetornar409ProdutoDuplicado() {
+        String duplicadoJson = """
+            {
+                "nome": "Teclado Mecânico",
+                "preco": 250.00,
+                "quantidadeEstoque": 5
+            }
+            """;
+
+        given()
+                .contentType(ContentType.JSON)
+                .body(duplicadoJson)
+                .when().post("/produtos")
+                .then()
+                .statusCode(409)
+                .body("status", equalTo(409))
+                .body("erro", equalTo("Produto duplicado"))
+                .body("mensagens", not(empty()));
     }
 }

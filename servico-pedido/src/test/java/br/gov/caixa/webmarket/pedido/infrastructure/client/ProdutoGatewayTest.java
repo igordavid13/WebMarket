@@ -14,8 +14,10 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import static io.restassured.RestAssured.given;
+import static java.util.Optional.empty;
 import static org.hamcrest.CoreMatchers.hasItem;
 import static org.hamcrest.CoreMatchers.not;
+import static org.hamcrest.Matchers.equalTo;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
@@ -58,7 +60,9 @@ public class ProdutoGatewayTest {
                 .body(payloadPedido("Cliente Falha Tecnica"))
                 .when().post("/pedidos")
                 .then()
-                .statusCode(503);
+                .statusCode(503)
+                .body("status", equalTo(503))
+                .body("mensagens", not(empty()));
 
         verify(produtoClient, times(3)).verificarDisponibilidade(anyLong(), anyInt());
 
@@ -80,7 +84,9 @@ public class ProdutoGatewayTest {
                 .body(payloadPedido("Cliente Negocio 422"))
                 .when().post("/pedidos")
                 .then()
-                .statusCode(422);
+                .statusCode(422)
+                .body("status", equalTo(422))
+                .body("mensagens", not(empty()));
 
         verify(produtoClient, times(1)).verificarDisponibilidade(anyLong(), anyInt());
     }
