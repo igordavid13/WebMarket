@@ -45,6 +45,7 @@ public class ProdutoResource {
     }
 
     @GET
+    @RolesAllowed(ADMIN)
     @Path("/{id}/disponibilidade")
     public Produto verificarDisponibilidade(@PathParam("id") Long id, @QueryParam("quantidade") @DefaultValue("1") Integer quantidade) {
         return produtoService.verificarDisponibilidade(id, quantidade);
