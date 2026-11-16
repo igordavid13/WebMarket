@@ -145,15 +145,13 @@ A autenticação utiliza **HTTP Basic** com credenciais persistidas no banco H2 
 
 **Terminal 1 — `servico-produto` (Porta 8081):**
 ```powershell
-.\mvnw.cmd quarkus:dev -pl servico-produto
+mvn quarkus:dev -pl servico-produto
 ```
-*(No Linux/macOS ou com Maven global: `mvn quarkus:dev -pl servico-produto`)*
 
 **Terminal 2 — `servico-pedido` (Porta 8080):**
 ```powershell
-.\mvnw.cmd quarkus:dev -pl servico-pedido
+mvn quarkus:dev -pl servico-pedido
 ```
-*(No Linux/macOS ou com Maven global: `mvn quarkus:dev -pl servico-pedido`)*
 
 ---
 
@@ -162,9 +160,8 @@ A autenticação utiliza **HTTP Basic** com credenciais persistidas no banco H2 
 Para executar a suíte completa de testes automatizados (`@QuarkusTest`) de ambos os módulos a partir da raiz:
 
 ```powershell
-.\mvnw.cmd clean verify
+mvn clean verify
 ```
-*(Ou `mvn clean verify`)*
 
 - **Contagem real de testes:** **34 testes passando, 0 falhas** (21 testes no `servico-pedido` + 13 testes no `servico-produto`), cobrindo CRUD REST Nível 2, consultas de repositório, fault tolerance (retry, timeout, circuit breaker), validação de entrada, formatos de erro, autenticação Basic/BCrypt e autorização por papel e posse.
 

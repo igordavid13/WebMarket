@@ -1,7 +1,7 @@
 # Auto-avaliação
 
 **WebMarket - Gestão de Pedidos e Estoque**
-* **Grupo:** Davi Fernandez, Igor David, Marcos Ferreira
+* **Grupo:** Davi Fernandez (Codificação, Implementação e Testes), Igor David (Arquitetura, Codificação), Marcos Ferreira (Arquitetura, Codificação e Testes)
 * **Tema/domínio:** Ecossistema simplificado de e-commerce com segregação entre gestão de pedidos de compra (com controle de posse por cliente) e catálogo/estoque de produtos com verificação síncrona de disponibilidade.
 * **Versões:** Quarkus 3.20.3 | Java 21
 
@@ -91,9 +91,10 @@
 * **Nível auto-atribuído:** 2 (Proficiente)
 * **Como rodar:**
   * Execução 100% local e reproduzível sem Docker:
-    * Terminal 1: `.\mvnw.cmd quarkus:dev -pl servico-produto` (Porta 8081)
-    * Terminal 2: `.\mvnw.cmd quarkus:dev -pl servico-pedido` (Porta 8080)
-    * Build e verificação completa: `.\mvnw.cmd clean verify` na raiz.
+    * Terminal 1: `mvn quarkus:dev -pl servico-produto` (Porta 8081)
+    * Terminal 2: `mvn quarkus:dev -pl servico-pedido
+` (Porta 8080)
+    * Build e verificação completa: `mvn clean verify` na raiz.
 
 ---
 

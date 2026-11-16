@@ -1,0 +1,1530 @@
+{
+  "info": {
+    "name": "WebMarket - Quarkus (Apresentacao Banca)",
+    "description": "Collection completa do WebMarket (servico-pedido na porta 8080 e servico-produto na porta 8081) cobrindo fluxo feliz, validacoes, tolerancia a falhas (422/503), autenticacao Basic (401), RBAC (admin vs cliente - 403), regra de posse e observabilidade (/q/health e /q/metrics).",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrlPedido",
+      "value": "http://localhost:8080",
+      "type": "string"
+    },
+    {
+      "key": "baseUrlProduto",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "adminUser",
+      "value": "admin",
+      "type": "string"
+    },
+    {
+      "key": "adminPass",
+      "value": "admin123",
+      "type": "string"
+    },
+    {
+      "key": "mariaUser",
+      "value": "maria",
+      "type": "string"
+    },
+    {
+      "key": "mariaPass",
+      "value": "maria123",
+      "type": "string"
+    },
+    {
+      "key": "joaoUser",
+      "value": "joao",
+      "type": "string"
+    },
+    {
+      "key": "joaoPass",
+      "value": "joao123",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Observabilidade (/q/health e /q/metrics)",
+      "description": "Valida que /q/health e publico para orquestradores (200) e /q/metrics exige papel admin (401 sem login, 403 cliente, 200 admin).",
+      "item": [
+        {
+          "name": "Produto - Health Live (Publico -> 200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/q/health/live",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "q",
+                "health",
+                "live"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`\n\nDeve responder UP sem exigir autenticacao."
+          },
+          "response": []
+        },
+        {
+          "name": "Produto - Health Ready (Publico -> 200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/q/health/ready",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "q",
+                "health",
+                "ready"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`\n\nVerifica prontidao do H2 e da aplicacao."
+          },
+          "response": []
+        },
+        {
+          "name": "Pedido - Health Live (Publico -> 200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/q/health/live",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "q",
+                "health",
+                "live"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`"
+          },
+          "response": []
+        },
+        {
+          "name": "Pedido - Health Ready (Publico -> 200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/q/health/ready",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "q",
+                "health",
+                "ready"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`"
+          },
+          "response": []
+        },
+        {
+          "name": "Pedido - Metrics SEM Login (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/q/metrics",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "q",
+                "metrics"
+              ]
+            },
+            "description": "**Status Esperado:** `401 Unauthorized`\n\nExige autenticacao Basic."
+          },
+          "response": []
+        },
+        {
+          "name": "Pedido - Metrics como CLIENTE maria (403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/q/metrics",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "q",
+                "metrics"
+              ]
+            },
+            "description": "**Status Esperado:** `403 Forbidden`\n\nPapel cliente nao tem permissao para acessar metricas Prometheus.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Pedido - Metrics como ADMIN (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/q/metrics",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "q",
+                "metrics"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`\n\nExibe metricas JVM, HTTP e a metrica customizada `pedidos_consultados_total`.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Produto - Metrics como ADMIN (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/q/metrics",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "q",
+                "metrics"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`\n\nExibe a metrica customizada `produtos_consultados_total`.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "2. Servico Produto (Porta 8081) - Catalogo e RBAC",
+      "description": "Testa todas as operacoes de Produto com usuarios sem login (401), cliente (leitura 200 / escrita 403) e admin (acesso total).",
+      "item": [
+        {
+          "name": "Listar Produtos - SEM Credencial (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "**Status Esperado:** `401 Unauthorized`\n\nDeve retornar 401 com header WWW-Authenticate: Basic."
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Produtos - Senha Errada (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "**Status Esperado:** `401 Unauthorized`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "admin"
+                },
+                {
+                  "key": "password",
+                  "value": "errada"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Produtos - CLIENTE maria (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`\n\nPapel cliente tem permissao de leitura no catalogo.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Produtos Disponiveis - CLIENTE maria (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos?somenteDisponiveis=true",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos"
+              ],
+              "query": [
+                {
+                  "key": "somenteDisponiveis",
+                  "value": "true"
+                }
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`\n\nConsulta customizada Panache filtrando estoque > 0.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Produto ID 1 - CLIENTE maria (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos/1",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos",
+                "1"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Produto Inexistente 999 - ADMIN (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos/999",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos",
+                "999"
+              ]
+            },
+            "description": "**Status Esperado:** `404 Not Found`\n\nDeve retornar JSON ErroResposta padronizado com status 404.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Checar Disponibilidade OK - ADMIN (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos/1/disponibilidade?quantidade=2",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos",
+                "1",
+                "disponibilidade"
+              ],
+              "query": [
+                {
+                  "key": "quantidade",
+                  "value": "2"
+                }
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Checar Disponibilidade Insuficiente - ADMIN (409)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos/1/disponibilidade?quantidade=9999",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos",
+                "1",
+                "disponibilidade"
+              ],
+              "query": [
+                {
+                  "key": "quantidade",
+                  "value": "9999"
+                }
+              ]
+            },
+            "description": "**Status Esperado:** `409 Conflict`\n\nRetorna 409 Conflict no padrao ErroResposta quando estoque e insuficiente.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Produto - CLIENTE maria PROIBIDO (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "**Status Esperado:** `403 Forbidden`\n\nSomente admin pode cadastrar produtos.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Webcam Full HD\",\n  \"preco\": 199.9,\n  \"quantidadeEstoque\": 15\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Produto - ADMIN Sucesso (201 Created)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "**Status Esperado:** `201 Created`\n\nCria produto via sequence (ID >= 10) e devolve cabecalho Location.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Webcam Full HD\",\n  \"preco\": 199.9,\n  \"quantidadeEstoque\": 15\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Produto Duplicado - ADMIN (409 Conflict)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "**Status Esperado:** `409 Conflict`\n\nTesta regra de unicidade de nome.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Teclado Mecânico\",\n  \"preco\": 250.0,\n  \"quantidadeEstoque\": 5\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Produto Invalido - ADMIN (400 Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos"
+              ]
+            },
+            "description": "**Status Esperado:** `400 Bad Request`\n\nDispara Jakarta Validation e retorna mensagens em pt-BR no padrao ErroResposta.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"\",\n  \"preco\": -5.0,\n  \"quantidadeEstoque\": -1\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Produto ID 10 - CLIENTE maria PROIBIDO (403)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos/10",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos",
+                "10"
+              ]
+            },
+            "description": "**Status Esperado:** `403 Forbidden`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Webcam 4K\",\n  \"preco\": 350.0,\n  \"quantidadeEstoque\": 10\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Produto ID 10 - ADMIN Sucesso (200)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos/10",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos",
+                "10"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Webcam 4K\",\n  \"preco\": 350.0,\n  \"quantidadeEstoque\": 10\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Produto ID 10 - CLIENTE maria PROIBIDO (403)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos/10",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos",
+                "10"
+              ]
+            },
+            "description": "**Status Esperado:** `403 Forbidden`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Produto ID 10 - ADMIN Sucesso (204 No Content)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlProduto}}/produtos/10",
+              "host": [
+                "{{baseUrlProduto}}"
+              ],
+              "path": [
+                "produtos",
+                "10"
+              ]
+            },
+            "description": "**Status Esperado:** `204 No Content`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "3. Servico Pedido (Porta 8080) - Fluxo Principal, RBAC e Posse",
+      "description": "Demonstra a regra de posse (cliente ve/cria apenas seus proprios pedidos) e o poder administrativo do papel admin.",
+      "item": [
+        {
+          "name": "Listar Pedidos - SEM Credencial (401)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "**Status Esperado:** `401 Unauthorized`"
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Pedidos - CLIENTE maria (200 - Apenas da maria)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`\n\nRegra de posse: maria recebe apenas os pedidos onde clienteNome == maria.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Pedidos Filtrando Outro Cliente - CLIENTE maria (403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos?cliente=joao",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos"
+              ],
+              "query": [
+                {
+                  "key": "cliente",
+                  "value": "joao"
+                }
+              ]
+            },
+            "description": "**Status Esperado:** `403 Forbidden`\n\nRegra de posse: maria nao pode consultar pedidos do joao.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Listar Todos os Pedidos - ADMIN (200 - Todos)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`\n\nAdmin enxerga pedidos de todos os clientes (maria e joao).",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Pedido ID 1 (da maria) - CLIENTE maria (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos/1",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos",
+                "1"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Pedido ID 2 (do joao) - CLIENTE maria PROIBIDO (403)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos/2",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos",
+                "2"
+              ]
+            },
+            "description": "**Status Esperado:** `403 Forbidden`\n\nRegra de posse: O pedido pertence a outro cliente.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Pedido ID 2 (do joao) - ADMIN Permitido (200)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos/2",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos",
+                "2"
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Buscar Pedido Inexistente 999 - ADMIN (404)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos/999",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos",
+                "999"
+              ]
+            },
+            "description": "**Status Esperado:** `404 Not Found`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Pedido Proprio - CLIENTE maria (201 Created)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "**Status Esperado:** `201 Created`\n\nConsulta disponibilidade no servico-produto (8081) via REST Client e grava o pedido CONFIRMADO.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteNome\": \"maria\",\n  \"itens\": [\n    {\n      \"produtoId\": 1,\n      \"quantidade\": 1,\n      \"precoUnitario\": 250.0\n    }\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Pedido em Nome de Outro - CLIENTE maria PROIBIDO (403)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "**Status Esperado:** `403 Forbidden`\n\nRegra de posse impede maria de criar pedido em nome de joao.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteNome\": \"joao\",\n  \"itens\": [\n    {\n      \"produtoId\": 1,\n      \"quantidade\": 1,\n      \"precoUnitario\": 250.0\n    }\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Status - CLIENTE maria PROIBIDO (403)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos/1/status?novoStatus=CANCELADO",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos",
+                "1",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "novoStatus",
+                  "value": "CANCELADO"
+                }
+              ]
+            },
+            "description": "**Status Esperado:** `403 Forbidden`\n\nOperacao restrita ao papel admin.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Atualizar Status - ADMIN Sucesso (200)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos/1/status?novoStatus=ENTREGUE",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos",
+                "1",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "novoStatus",
+                  "value": "ENTREGUE"
+                }
+              ]
+            },
+            "description": "**Status Esperado:** `200 OK`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Pedido - CLIENTE maria PROIBIDO (403)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos/10",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos",
+                "10"
+              ]
+            },
+            "description": "**Status Esperado:** `403 Forbidden`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Excluir Pedido ID 10 - ADMIN Sucesso (204 No Content)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos/10",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos",
+                "10"
+              ]
+            },
+            "description": "**Status Esperado:** `204 No Content`",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{adminUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{adminPass}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "4. Integracao, Validacao e Fault Tolerance (400 / 422 / 503)",
+      "description": "Cenarios de erro para demonstrar ao vivo: erro de entrada (400), regra de negocio remota sem retry (422) e queda do servico-produto acionando Retry + Circuit Breaker + Fallback (503).",
+      "item": [
+        {
+          "name": "Criar Pedido Mal Formado - Validacao (400 Bad Request)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "**Status Esperado:** `400 Bad Request`\n\nDispara Bean Validation e retorna mensagens em pt-BR no corpo ErroResposta.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteNome\": \"\",\n  \"itens\": []\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Pedido com Produto Inexistente - Negocio (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "**Status Esperado:** `422 Unprocessable Entity`\n\nservico-produto devolve 404 -> @ClientExceptionMapper traduz para 422 sem retry e sem abrir circuito.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteNome\": \"maria\",\n  \"itens\": [\n    {\n      \"produtoId\": 9999,\n      \"quantidade\": 1,\n      \"precoUnitario\": 100.0\n    }\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Pedido com Estoque Insuficiente - Negocio (422)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "**Status Esperado:** `422 Unprocessable Entity`\n\nservico-produto devolve 409 -> @ClientExceptionMapper traduz para 422.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteNome\": \"maria\",\n  \"itens\": [\n    {\n      \"produtoId\": 1,\n      \"quantidade\": 5000,\n      \"precoUnitario\": 250.0\n    }\n  ]\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Criar Pedido com servico-produto FORA DO AR (503 Fallback)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrlPedido}}/pedidos",
+              "host": [
+                "{{baseUrlPedido}}"
+              ],
+              "path": [
+                "pedidos"
+              ]
+            },
+            "description": "**Status Esperado:** `503 Service Unavailable`\n\nDerrube o servico-produto (8081) e execute 3 vezes:\n1a chamada: faz 3 tentativas (Retry) e devolve 503.\n2a chamada: completa janela de 4 falhas e abre o Circuit Breaker.\n3a chamada: responde 503 instantaneamente sem tentar conectar.",
+            "auth": {
+              "type": "basic",
+              "basic": [
+                {
+                  "key": "username",
+                  "value": "{{mariaUser}}",
+                  "type": "string"
+                },
+                {
+                  "key": "password",
+                  "value": "{{mariaPass}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"clienteNome\": \"maria\",\n  \"itens\": [\n    {\n      \"produtoId\": 1,\n      \"quantidade\": 1,\n      \"precoUnitario\": 250.0\n    }\n  ]\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
