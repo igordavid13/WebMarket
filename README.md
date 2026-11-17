@@ -163,7 +163,7 @@ Para executar a suíte completa de testes automatizados (`@QuarkusTest`) de ambo
 mvn clean verify
 ```
 
-- **Contagem real de testes:** **34 testes passando, 0 falhas** (21 testes no `servico-pedido` + 13 testes no `servico-produto`), cobrindo CRUD REST Nível 2, consultas de repositório, fault tolerance (retry, timeout, circuit breaker), validação de entrada, formatos de erro, autenticação Basic/BCrypt e autorização por papel e posse.
+- **Contagem real de testes:** **41 testes passando, 0 falhas** (23 testes no `servico-pedido` + 18 testes no `servico-produto`), cobrindo CRUD REST Nível 2, consultas de repositório, fault tolerance (retry, timeout, circuit breaker), validação de entrada, formatos de erro, autenticação Basic/BCrypt e autorização por papel e posse.
 
 ### Perfis de Configuração (`application.properties`)
 - **`%dev`**: Banco H2 em memória com `drop-and-create` e carga de dados de desenvolvimento (`import.sql`).
